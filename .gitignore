@@ -1,0 +1,13 @@
+# Frontend and Backend Build / Dependency Directories
+node_modules/
+dist/
+target/
+
+# IDE Configuration Files
+.idea/
+.vscode/
+
+# Sensitive Configuration Files
+.env
+application.properties
+application.yml
