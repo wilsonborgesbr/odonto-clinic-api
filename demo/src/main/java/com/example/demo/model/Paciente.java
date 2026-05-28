@@ -45,13 +45,6 @@ public class Paciente {
 
     // Dados Clínicos
     private String tipoSanguineo;
-    private String alergias;
-    private String medicamentosEmUso;
-    private String doencasPreexistentes;
-    private Boolean gestante;
-    private Boolean fumante;
-    private Boolean consumoAlcool;
-    private String observacoesClinicas;
 
     // Dados Administrativos
     private String numeroProntuario;

@@ -94,13 +94,6 @@ public class PacienteService {
 
         // Atualização de Dados Clínicos
         pacienteExistente.setTipoSanguineo(dadosAtualizados.getTipoSanguineo());
-        pacienteExistente.setAlergias(dadosAtualizados.getAlergias());
-        pacienteExistente.setMedicamentosEmUso(dadosAtualizados.getMedicamentosEmUso());
-        pacienteExistente.setDoencasPreexistentes(dadosAtualizados.getDoencasPreexistentes());
-        pacienteExistente.setGestante(dadosAtualizados.getGestante());
-        pacienteExistente.setFumante(dadosAtualizados.getFumante());
-        pacienteExistente.setConsumoAlcool(dadosAtualizados.getConsumoAlcool());
-        pacienteExistente.setObservacoesClinicas(dadosAtualizados.getObservacoesClinicas());
 
         // Atualização de Dados Administrativos
         pacienteExistente.setTipoPaciente(dadosAtualizados.getTipoPaciente());
