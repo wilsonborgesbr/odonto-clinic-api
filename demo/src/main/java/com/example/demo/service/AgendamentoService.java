@@ -34,7 +34,7 @@ public class AgendamentoService {
                 .filter(d -> Boolean.TRUE.equals(d.getAtivo()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dentista não encontrado."));
 
-        List<Agendamento> conflitos = agendamentoRepository.findByDentistaIdAndDataHoraInicioBetween(
+        List<Agendamento> conflitos = agendamentoRepository.findConflitos(
                 agendamento.getDentistaId(),
                 agendamento.getDataHoraInicio(),
                 agendamento.getDataHoraFim()
