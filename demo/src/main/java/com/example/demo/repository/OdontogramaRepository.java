@@ -1,4 +1,4 @@
-package com.example.demo.repository;
+ package com.example.demo.repository;
 
 import com.example.demo.model.Odontograma;
 import org.springframework.data.mongodb.repository.MongoRepository;
