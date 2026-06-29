@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -19,13 +22,17 @@ public class Funcionario {
     @Id
     private String id;
 
+    @NotBlank(message = "Nome completo é obrigatório")
     private String nomeCompleto;
 
+    @NotBlank(message = "CPF é obrigatório")
     @Indexed(unique = true)
     private String cpf;
 
+    @NotNull(message = "Cargo é obrigatório")
     private CargoFuncionarioEnum cargo;
 
+    @Email(message = "E-mail inválido")
     private String email;
 
     private String telefoneCelular;

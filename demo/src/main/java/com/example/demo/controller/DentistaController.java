@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Dentista;
 import com.example.demo.service.DentistaService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class DentistaController {
     private DentistaService dentistaService;
 
     @PostMapping
-    public ResponseEntity<Dentista> criar(@RequestBody Dentista dentista) {
+    public ResponseEntity<Dentista> criar(@RequestBody @Valid Dentista dentista) {
         Dentista novoDentista = dentistaService.criar(dentista);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoDentista);
     }
@@ -35,7 +36,7 @@ public class DentistaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Dentista> atualizar(@PathVariable String id, @RequestBody Dentista dentista) {
+    public ResponseEntity<Dentista> atualizar(@PathVariable String id, @RequestBody @Valid Dentista dentista) {
         Dentista dentistaAtualizado = dentistaService.atualizar(id, dentista);
         return ResponseEntity.ok(dentistaAtualizado);
     }

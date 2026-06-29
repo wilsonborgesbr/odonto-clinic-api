@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,18 +24,23 @@ public class ContaPagar {
     @Id
     private String id;
 
+    @NotBlank(message = "Descrição é obrigatória")
     private String descricao;
 
+    @NotNull(message = "Categoria é obrigatória")
     private CategoriaContaPagarEnum categoria;
 
     private String fornecedor;
 
+    @NotNull(message = "Valor é obrigatório")
     private Double valor;
 
+    @NotNull(message = "Data de vencimento é obrigatória")
     private LocalDate dataVencimento;
 
     private LocalDate dataPagamento;
 
+    @NotNull(message = "Status é obrigatório")
     @Builder.Default
     private StatusFinanceiroEnum status = StatusFinanceiroEnum.PENDENTE;
 

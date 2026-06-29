@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.enums.StatusAgendamentoEnum;
 import com.example.demo.model.Agendamento;
 import com.example.demo.service.AgendamentoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class AgendamentoController {
     private AgendamentoService agendamentoService;
 
     @PostMapping
-    public ResponseEntity<Agendamento> criar(@RequestBody Agendamento agendamento) {
+    public ResponseEntity<Agendamento> criar(@RequestBody @Valid Agendamento agendamento) {
         Agendamento novoAgendamento = agendamentoService.criar(agendamento);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoAgendamento);
     }
@@ -54,7 +55,7 @@ public class AgendamentoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Agendamento> atualizar(@PathVariable String id, @RequestBody Agendamento agendamento) {
+    public ResponseEntity<Agendamento> atualizar(@PathVariable String id, @RequestBody @Valid Agendamento agendamento) {
         Agendamento agendamentoAtualizado = agendamentoService.atualizar(id, agendamento);
         return ResponseEntity.ok(agendamentoAtualizado);
     }

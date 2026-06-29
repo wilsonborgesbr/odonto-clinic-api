@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Anamnese;
 import com.example.demo.service.AnamneseService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class AnamneseController {
     private AnamneseService anamneseService;
 
     @PostMapping
-    public ResponseEntity<Anamnese> criar(@RequestBody Anamnese anamnese) {
+    public ResponseEntity<Anamnese> criar(@RequestBody @Valid Anamnese anamnese) {
         Anamnese novaAnamnese = anamneseService.criar(anamnese);
         return ResponseEntity.status(HttpStatus.CREATED).body(novaAnamnese);
     }

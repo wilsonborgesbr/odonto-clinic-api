@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Odontograma;
 import com.example.demo.service.OdontogramaService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class OdontogramaController {
     private OdontogramaService odontogramaService;
 
     @PostMapping
-    public ResponseEntity<Odontograma> criar(@RequestBody Odontograma odontograma) {
+    public ResponseEntity<Odontograma> criar(@RequestBody @Valid Odontograma odontograma) {
         Odontograma novoOdontograma = odontogramaService.criar(odontograma);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoOdontograma);
     }

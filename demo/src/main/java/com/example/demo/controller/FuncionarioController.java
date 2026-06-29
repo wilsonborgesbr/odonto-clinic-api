@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Funcionario;
 import com.example.demo.service.FuncionarioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class FuncionarioController {
     private FuncionarioService funcionarioService;
 
     @PostMapping
-    public ResponseEntity<Funcionario> criar(@RequestBody Funcionario funcionario) {
+    public ResponseEntity<Funcionario> criar(@RequestBody @Valid Funcionario funcionario) {
         Funcionario novoFuncionario = funcionarioService.criar(funcionario);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoFuncionario);
     }
@@ -35,7 +36,7 @@ public class FuncionarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Funcionario> atualizar(@PathVariable String id, @RequestBody Funcionario funcionario) {
+    public ResponseEntity<Funcionario> atualizar(@PathVariable String id, @RequestBody @Valid Funcionario funcionario) {
         Funcionario funcionarioAtualizado = funcionarioService.atualizar(id, funcionario);
         return ResponseEntity.ok(funcionarioAtualizado);
     }

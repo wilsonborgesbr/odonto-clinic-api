@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,19 +25,28 @@ public class Paciente {
     private String id;
 
     // Dados Pessoais
+    @NotBlank(message = "Nome completo é obrigatório")
     private String nomeCompleto;
 
+    @NotBlank(message = "CPF é obrigatório")
     @Indexed(unique = true)
     private String cpf;
 
     private String rg;
+
+    @NotNull(message = "Data de nascimento é obrigatória")
     private LocalDate dataNascimento;
+
+    @NotNull(message = "Sexo é obrigatório")
     private Sexo sexo;
+
     private EstadoCivil estadoCivil;
     private String profissao;
 
     // Contato
+    @Email(message = "E-mail inválido")
     private String email;
+
     private String telefoneCelular;
     private String telefoneFixo;
     private String nomeContatoEmergencia;
@@ -48,7 +60,10 @@ public class Paciente {
 
     // Dados Administrativos
     private String numeroProntuario;
+
+    @NotNull(message = "Tipo de paciente é obrigatório")
     private TipoPaciente tipoPaciente;
+
     private TipoPagamento tipoPagamento;
     private ComoConheceu comoConheceu;
     private Boolean ativo;
