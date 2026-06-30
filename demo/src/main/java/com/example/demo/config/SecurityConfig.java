@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll() // Rota pública
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() // Rota pública
                         .requestMatchers("/error").permitAll() // Permite a rota de erro do Spring para não retornar 403 quando ocorre um erro interno (como falha no banco)
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Permite acesso ao Swagger UI e documentação
                         .anyRequest().authenticated() // Qualquer outra requisição precisa de um token válido
                 )
                 // Adicionamos nosso filtro antes do filtro padrão do Spring Security

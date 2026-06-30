@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Anamnese;
 import com.example.demo.service.AnamneseService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/anamneses")
+@Tag(name = "Anamnese", description = "Endpoints para gerenciamento de fichas de anamnese dos pacientes")
 public class AnamneseController {
 
     @Autowired

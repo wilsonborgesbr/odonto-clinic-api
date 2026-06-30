@@ -4,6 +4,7 @@ import com.example.demo.enums.StatusAgendamentoEnum;
 import com.example.demo.model.Agendamento;
 import com.example.demo.service.AgendamentoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/agendamentos")
+@Tag(name = "Agendamento", description = "Endpoints para gerenciamento de agendamentos de consultas")
 public class AgendamentoController {
 
     @Autowired

@@ -4,6 +4,7 @@ import com.example.demo.enums.CategoriaEstoqueEnum;
 import com.example.demo.model.Estoque;
 import com.example.demo.service.EstoqueService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/estoque")
+@Tag(name = "Estoque", description = "Endpoints para controle de estoque de insumos e materiais")
 public class EstoqueController {
 
     @Autowired

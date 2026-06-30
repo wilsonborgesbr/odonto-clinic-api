@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Paciente;
 import com.example.demo.service.PacienteService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/pacientes")
+@Tag(name = "Paciente", description = "Endpoints para gerenciamento de pacientes")
 public class PacienteController {
 
     @Autowired

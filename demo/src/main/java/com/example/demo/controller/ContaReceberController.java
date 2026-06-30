@@ -4,6 +4,7 @@ import com.example.demo.enums.StatusFinanceiroEnum;
 import com.example.demo.model.ContaReceber;
 import com.example.demo.service.ContaReceberService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/contas-receber")
+@Tag(name = "Contas a Receber", description = "Endpoints para gerenciamento de receitas e contas a receber dos pacientes")
 public class ContaReceberController {
 
     @Autowired
