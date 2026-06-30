@@ -4,6 +4,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen?logo=springboot&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?logo=apachemaven&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203-85EA2D?logo=swagger&logoColor=black)
 
 API REST para gerenciamento completo de clínica odontológica. Cobre desde o cadastro de pacientes e dentistas até controle financeiro, estoque e documentos clínicos.
 
@@ -15,6 +16,7 @@ API REST para gerenciamento completo de clínica odontológica. Cobre desde o ca
 - **Bean Validation** — validação de entrada
 - **Lombok** — redução de boilerplate
 - **Maven** — build e dependências
+- **SpringDoc OpenAPI** — documentação interativa via Swagger UI
 
 ## Como executar
 
@@ -31,6 +33,20 @@ cd odonto-clinic-api/demo
 ```
 
 A API sobe na porta **8080** por padrão. Todos os endpoints (exceto `/auth/*`) exigem token JWT no header `Authorization: Bearer <token>`.
+
+## Documentação interativa (Swagger)
+
+A API possui documentação interativa via Swagger UI, disponível em:
+
+http://localhost:8080/swagger-ui/index.html
+
+### Como testar
+
+1. Acesse o Swagger UI no link acima
+2. Registre um usuário em `POST /auth/register`
+3. Faça login em `POST /auth/login` e copie o token retornado
+4. Clique em **Authorize** no topo da página e cole o token
+5. Teste qualquer endpoint diretamente pela interface
 
 ## Endpoints
 
