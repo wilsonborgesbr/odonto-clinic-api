@@ -32,13 +32,15 @@ cd odonto-clinic-api/demo
 ./mvnw spring-boot:run
 ```
 
+> API também disponível em produção: https://odonto-clinic-api-production.up.railway.app
+
 A API sobe na porta **8080** por padrão. Todos os endpoints (exceto `/auth/*`) exigem token JWT no header `Authorization: Bearer <token>`.
 
 ## Documentação interativa (Swagger)
 
 A API possui documentação interativa via Swagger UI, disponível em:
 
-http://localhost:8080/swagger-ui/index.html
+https://odonto-clinic-api-production.up.railway.app/swagger-ui/index.html
 
 ### Como testar
 
