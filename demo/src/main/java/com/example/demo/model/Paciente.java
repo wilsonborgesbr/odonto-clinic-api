@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,6 +54,7 @@ public class Paciente {
     private String telefoneEmergencia;
 
     // Endereço
+    @Valid
     private Endereco endereco;
 
     // Dados Clínicos
@@ -69,21 +71,6 @@ public class Paciente {
     private Boolean ativo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // Classe Interna Endereco
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class Endereco {
-        private String cep;
-        private String logradouro;
-        private String numero;
-        private String complemento;
-        private String bairro;
-        private String cidade;
-        private String estado;
-    }
 
     // Enums de Controle
     public enum Sexo {

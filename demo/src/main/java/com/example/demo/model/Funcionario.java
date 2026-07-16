@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +37,9 @@ public class Funcionario {
     private String email;
 
     private String telefoneCelular;
+
+    @Valid
+    private Endereco endereco;
 
     private Boolean ativo;
 

@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Paciente;
+import com.example.demo.model.Endereco;
 import com.example.demo.repository.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -76,9 +77,9 @@ public class PacienteService {
 
         // Atualização de Endereço
         if (dadosAtualizados.getEndereco() != null) {
-            Paciente.Endereco end = pacienteExistente.getEndereco();
+            Endereco end = pacienteExistente.getEndereco();
             if (end == null) {
-                end = new Paciente.Endereco();
+                end = new Endereco();
             }
             end.setCep(dadosAtualizados.getEndereco().getCep());
             end.setLogradouro(dadosAtualizados.getEndereco().getLogradouro());

@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +36,9 @@ public class Dentista {
     private String email;
 
     private String telefoneCelular;
+
+    @Valid
+    private Endereco endereco;
 
     private Boolean ativo;
 
