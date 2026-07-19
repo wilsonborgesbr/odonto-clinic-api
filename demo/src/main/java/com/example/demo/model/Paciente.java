@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
+import com.example.demo.enums.SexoEnum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,7 +40,7 @@ public class Paciente {
     private LocalDate dataNascimento;
 
     @NotNull(message = "Sexo é obrigatório")
-    private Sexo sexo;
+    private SexoEnum sexo;
 
     private EstadoCivil estadoCivil;
     private String profissao;
@@ -73,10 +74,6 @@ public class Paciente {
     private LocalDateTime updatedAt;
 
     // Enums de Controle
-    public enum Sexo {
-        MASCULINO, FEMININO, OUTRO
-    }
-
     public enum EstadoCivil {
         SOLTEIRO, CASADO, DIVORCIADO, VIUVO, OUTRO
     }

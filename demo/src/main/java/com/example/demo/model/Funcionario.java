@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
+import com.example.demo.enums.SexoEnum;
 
 import java.time.LocalDateTime;
 
@@ -37,6 +38,9 @@ public class Funcionario {
     private String email;
 
     private String telefoneCelular;
+
+    @NotNull(message = "Sexo é obrigatório")
+    private SexoEnum sexo;
 
     @Valid
     private Endereco endereco;
