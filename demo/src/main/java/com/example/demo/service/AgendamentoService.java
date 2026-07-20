@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -51,8 +54,8 @@ public class AgendamentoService {
         return agendamentoRepository.save(agendamento);
     }
 
-    public List<Agendamento> listarTodos() {
-        return agendamentoRepository.findAll();
+    public Page<Agendamento> listarTodos(Pageable pageable) {
+        return agendamentoRepository.findAll(pageable);
     }
 
     public List<Agendamento> listarPorPaciente(String pacienteId) {

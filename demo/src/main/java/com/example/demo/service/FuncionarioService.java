@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,10 +32,9 @@ public class FuncionarioService {
         return funcionarioRepository.save(funcionario);
     }
 
-    public List<FuncionarioListagemDTO> listarTodos() {
-        return funcionarioRepository.findByAtivoTrue().stream()
-                .map(FuncionarioListagemDTO::new)
-                .toList();
+    public Page<FuncionarioListagemDTO> listarTodos(Pageable pageable) {
+        return funcionarioRepository.findByAtivoTrue(pageable)
+                .map(FuncionarioListagemDTO::new);
     }
 
     public Funcionario buscarPorId(String id) {

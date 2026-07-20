@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -37,10 +40,9 @@ public class PacienteService {
         return pacienteRepository.save(paciente);
     }
 
-    public List<PacienteListagemDTO> listarTodos() {
-        return pacienteRepository.findByAtivoTrue().stream()
-                .map(PacienteListagemDTO::new)
-                .toList();
+    public Page<PacienteListagemDTO> listarTodos(Pageable pageable) {
+        return pacienteRepository.findByAtivoTrue(pageable)
+                .map(PacienteListagemDTO::new);
     }
 
     public Paciente buscarPorId(String id) {

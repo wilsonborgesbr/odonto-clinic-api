@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +30,9 @@ public class DentistaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DentistaListagemDTO>> listarTodos() {
-        List<DentistaListagemDTO> dentistas = dentistaService.listarTodos();
+    public ResponseEntity<Page<DentistaListagemDTO>> listarTodos(
+            @PageableDefault(size = 10, sort = "nomeCompleto") Pageable pageable) {
+        Page<DentistaListagemDTO> dentistas = dentistaService.listarTodos(pageable);
         return ResponseEntity.ok(dentistas);
     }
 

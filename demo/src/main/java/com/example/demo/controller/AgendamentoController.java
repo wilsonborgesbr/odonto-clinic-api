@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +30,9 @@ public class AgendamentoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Agendamento>> listarTodos() {
-        List<Agendamento> agendamentos = agendamentoService.listarTodos();
+    public ResponseEntity<Page<Agendamento>> listarTodos(
+            @PageableDefault(size = 20, sort = "dataHoraInicio") Pageable pageable) {
+        Page<Agendamento> agendamentos = agendamentoService.listarTodos(pageable);
         return ResponseEntity.ok(agendamentos);
     }
 
