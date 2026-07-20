@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Dentista;
+import com.example.demo.dto.DentistaListagemDTO;
 import com.example.demo.service.DentistaService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,8 +27,8 @@ public class DentistaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Dentista>> listarTodos() {
-        List<Dentista> dentistas = dentistaService.listarTodos();
+    public ResponseEntity<List<DentistaListagemDTO>> listarTodos() {
+        List<DentistaListagemDTO> dentistas = dentistaService.listarTodos();
         return ResponseEntity.ok(dentistas);
     }
 

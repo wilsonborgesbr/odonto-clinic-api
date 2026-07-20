@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Dentista;
+import com.example.demo.dto.DentistaListagemDTO;
 import com.example.demo.repository.DentistaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,8 +29,10 @@ public class DentistaService {
         return dentistaRepository.save(dentista);
     }
 
-    public List<Dentista> listarTodos() {
-        return dentistaRepository.findByAtivoTrue();
+    public List<DentistaListagemDTO> listarTodos() {
+        return dentistaRepository.findByAtivoTrue().stream()
+                .map(DentistaListagemDTO::new)
+                .toList();
     }
 
     public Dentista buscarPorId(String id) {

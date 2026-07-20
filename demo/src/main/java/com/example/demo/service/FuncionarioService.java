@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Funcionario;
+import com.example.demo.dto.FuncionarioListagemDTO;
 import com.example.demo.repository.FuncionarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,8 +29,10 @@ public class FuncionarioService {
         return funcionarioRepository.save(funcionario);
     }
 
-    public List<Funcionario> listarTodos() {
-        return funcionarioRepository.findByAtivoTrue();
+    public List<FuncionarioListagemDTO> listarTodos() {
+        return funcionarioRepository.findByAtivoTrue().stream()
+                .map(FuncionarioListagemDTO::new)
+                .toList();
     }
 
     public Funcionario buscarPorId(String id) {

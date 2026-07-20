@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.Paciente;
 import com.example.demo.model.Endereco;
+import com.example.demo.dto.PacienteListagemDTO;
 import com.example.demo.repository.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,10 @@ public class PacienteService {
         return pacienteRepository.save(paciente);
     }
 
-    public List<Paciente> listarTodos() {
-        return pacienteRepository.findByAtivoTrue();
+    public List<PacienteListagemDTO> listarTodos() {
+        return pacienteRepository.findByAtivoTrue().stream()
+                .map(PacienteListagemDTO::new)
+                .toList();
     }
 
     public Paciente buscarPorId(String id) {
