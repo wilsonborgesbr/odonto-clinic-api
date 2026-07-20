@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.Valid;
 import com.example.demo.enums.SexoEnum;
 
@@ -29,6 +30,10 @@ public class Dentista {
     private String nomeCompleto;
 
     @NotBlank(message = "CRO é obrigatório")
+    @Pattern(
+            regexp = "CRO-[A-Z]{2} \\d{4,6}(\\/\\d{4})?",
+            message = "CRO deve seguir o formato: CRO-SE 12345 ou CRO-SE 12345/2022"
+    )
     @Indexed(unique = true)
     private String cro;
 
