@@ -53,4 +53,9 @@ public class PacienteController {
         pacienteService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<Paciente> reativar(@PathVariable String id) {
+        return ResponseEntity.ok(pacienteService.reativar(id));
+    }
 }

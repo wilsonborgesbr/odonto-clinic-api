@@ -53,4 +53,9 @@ public class DentistaController {
         dentistaService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<Dentista> reativar(@PathVariable String id) {
+        return ResponseEntity.ok(dentistaService.reativar(id));
+    }
 }

@@ -74,4 +74,14 @@ public class DentistaService {
 
         dentistaRepository.save(dentistaExistente);
     }
+
+    public Dentista reativar(String id) {
+        Dentista dentistaExistente = dentistaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dentista não encontrado."));
+
+        dentistaExistente.setAtivo(true);
+        dentistaExistente.setUpdatedAt(LocalDateTime.now());
+
+        return dentistaRepository.save(dentistaExistente);
+    }
 }

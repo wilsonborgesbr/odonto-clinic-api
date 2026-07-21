@@ -74,4 +74,14 @@ public class FuncionarioService {
 
         funcionarioRepository.save(funcionarioExistente);
     }
+
+    public Funcionario reativar(String id) {
+        Funcionario funcionarioExistente = funcionarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
+
+        funcionarioExistente.setAtivo(true);
+        funcionarioExistente.setUpdatedAt(LocalDateTime.now());
+
+        return funcionarioRepository.save(funcionarioExistente);
+    }
 }

@@ -53,4 +53,9 @@ public class FuncionarioController {
         funcionarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<Funcionario> reativar(@PathVariable String id) {
+        return ResponseEntity.ok(funcionarioService.reativar(id));
+    }
 }

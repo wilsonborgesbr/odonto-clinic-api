@@ -124,6 +124,16 @@ public class PacienteService {
         pacienteRepository.save(pacienteExistente);
     }
 
+    public Paciente reativar(String id) {
+        Paciente pacienteExistente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado."));
+
+        pacienteExistente.setAtivo(true);
+        pacienteExistente.setUpdatedAt(LocalDateTime.now());
+
+        return pacienteRepository.save(pacienteExistente);
+    }
+
     private String dadosAuthorized(String val) {
         return val;
     }
