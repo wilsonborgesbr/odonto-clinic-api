@@ -2,6 +2,7 @@
 node_modules/
 dist/
 target/
+odonto-clinic-web/
 
 # IDE Configuration Files
 .idea/
