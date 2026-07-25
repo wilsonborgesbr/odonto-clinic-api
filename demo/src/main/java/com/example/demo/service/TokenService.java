@@ -46,7 +46,7 @@ public class TokenService {
     }
 
     private Instant genExpirationDate() {
-        // O token expira em 2 horas a partir de agora
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+        // O token expira em 24 horas a partir de agora
+        return LocalDateTime.now().plusHours(24).toInstant(ZoneOffset.of("-03:00"));
     }
 }
