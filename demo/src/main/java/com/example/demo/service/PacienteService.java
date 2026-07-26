@@ -45,6 +45,15 @@ public class PacienteService {
                 .map(PacienteListagemDTO::new);
     }
 
+    public Page<PacienteListagemDTO> buscarPorNome(String nome, Pageable pageable) {
+        if (nome == null || nome.isBlank()) {
+            return listarTodos(pageable);
+        }
+        return pacienteRepository
+                .findByAtivoTrueAndNomeCompletoContainingIgnoreCase(nome.trim(), pageable)
+                .map(PacienteListagemDTO::new);
+    }
+
     public Paciente buscarPorId(String id) {
         return pacienteRepository.findById(id)
                 .filter(Paciente::getAtivo)

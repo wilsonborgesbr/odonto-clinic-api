@@ -31,8 +31,9 @@ public class PacienteController {
 
     @GetMapping
     public ResponseEntity<Page<PacienteListagemDTO>> listarTodos(
-            @PageableDefault(size = 10, sort = "nomeCompleto") Pageable pageable) {
-        Page<PacienteListagemDTO> pacientes = pacienteService.listarTodos(pageable);
+            @PageableDefault(size = 10, sort = "nomeCompleto") Pageable pageable,
+            @RequestParam(required = false) String nome) {
+        Page<PacienteListagemDTO> pacientes = pacienteService.buscarPorNome(nome, pageable);
         return ResponseEntity.ok(pacientes);
     }
 

@@ -14,4 +14,6 @@ public interface PacienteRepository extends MongoRepository<Paciente, String> {
     List<Paciente> findByAtivoTrue();
 
     Page<Paciente> findByAtivoTrue(Pageable pageable);
+
+    Page<Paciente> findByAtivoTrueAndNomeCompletoContainingIgnoreCase(String nomeCompleto, Pageable pageable);
 }
