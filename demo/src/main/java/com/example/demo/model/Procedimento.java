@@ -3,6 +3,7 @@ package com.example.demo.model;
 import com.example.demo.enums.NomeProcedimentoEnum;
 import com.example.demo.enums.RegiaoEnum;
 import com.example.demo.enums.StatusProcedimentoEnum;
+import com.example.demo.enums.TipoPagamentoProcedimentoEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,7 +26,14 @@ public class Procedimento {
     private String id;
 
     @Indexed
+    private String clinicaId;
+
+    @Indexed
     private String pacienteId;
+
+    /** Vínculo opcional a um odontograma específico da paciente. */
+    @Indexed
+    private String odontogramaId;
 
     private NomeProcedimentoEnum nomeProcedimento;
     private String descricao;
@@ -34,6 +42,9 @@ public class Procedimento {
     private StatusProcedimentoEnum status;
     private LocalDate dataRealizacao;
     private Double valor;
+    private TipoPagamentoProcedimentoEnum tipoPagamento;
+    private Integer numeroParcelas;
+    private LocalDate dataPrimeiroPagamento;
     private Integer numeroDeSessoes;
     private Integer sessaoAtual;
     private String observacoesTecnicas;

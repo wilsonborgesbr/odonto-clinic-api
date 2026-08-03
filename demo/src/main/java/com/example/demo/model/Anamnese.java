@@ -20,6 +20,9 @@ public class Anamnese {
     private String id;
 
     @Indexed
+    private String clinicaId;
+
+    @Indexed
     private String pacienteId;
 
     private String dentistaId;

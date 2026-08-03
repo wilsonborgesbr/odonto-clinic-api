@@ -10,9 +10,11 @@ import java.util.Optional;
 
 public interface DentistaRepository extends MongoRepository<Dentista, String> {
 
-    Optional<Dentista> findByCro(String cro);
+    Optional<Dentista> findByCroAndClinicaId(String cro, String clinicaId);
 
-    List<Dentista> findByAtivoTrue();
+    List<Dentista> findByClinicaIdAndAtivoTrue(String clinicaId);
 
-    Page<Dentista> findByAtivoTrue(Pageable pageable);
+    Page<Dentista> findByClinicaIdAndAtivoTrue(String clinicaId, Pageable pageable);
+
+    Optional<Dentista> findByIdAndClinicaId(String id, String clinicaId);
 }

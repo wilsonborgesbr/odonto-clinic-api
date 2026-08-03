@@ -10,3 +10,8 @@ odonto-clinic-web/
 
 # Sensitive Configuration Files
 .env
+
+# Claude Code
+.claude/
+boot.log
+query

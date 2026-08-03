@@ -22,6 +22,9 @@ public class Documento {
     private String id;
 
     @Indexed
+    private String clinicaId;
+
+    @Indexed
     private String pacienteId;
 
     private TipoDocumentoEnum tipo;

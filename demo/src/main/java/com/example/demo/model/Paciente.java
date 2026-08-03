@@ -26,6 +26,9 @@ public class Paciente {
     @Id
     private String id;
 
+    @Indexed
+    private String clinicaId;
+
     // Dados Pessoais
     @NotBlank(message = "Nome completo é obrigatório")
     private String nomeCompleto;
@@ -66,6 +69,8 @@ public class Paciente {
 
     @NotNull(message = "Tipo de paciente é obrigatório")
     private TipoPaciente tipoPaciente;
+
+    private String convenioId;
 
     private TipoPagamento tipoPagamento;
     private ComoConheceu comoConheceu;

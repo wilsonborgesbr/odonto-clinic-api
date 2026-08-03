@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import com.example.demo.enums.FormaPagamentoEnum;
 import com.example.demo.enums.StatusFinanceiroEnum;
+import com.example.demo.enums.TipoPagamentoProcedimentoEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,9 @@ public class ContaReceber {
     @Id
     private String id;
 
+    @Indexed
+    private String clinicaId;
+
     @NotBlank(message = "ID do paciente é obrigatório")
     @Indexed
     private String pacienteId;
@@ -42,6 +46,11 @@ public class ContaReceber {
 
     @NotNull(message = "Forma de pagamento é obrigatória")
     private FormaPagamentoEnum formaPagamento;
+
+    private TipoPagamentoProcedimentoEnum tipoPagamento;
+
+    // Ordem da parcela dentro do plano (1..N), apenas informativo
+    private Integer parcelaAtual;
 
     @Builder.Default
     private Integer numeroParcelas = 1;

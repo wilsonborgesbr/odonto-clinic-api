@@ -9,11 +9,14 @@ import java.util.Optional;
 
 public interface PacienteRepository extends MongoRepository<Paciente, String> {
 
-    Optional<Paciente> findByCpf(String cpf);
+    Optional<Paciente> findByCpfAndClinicaId(String cpf, String clinicaId);
 
-    List<Paciente> findByAtivoTrue();
+    List<Paciente> findByClinicaIdAndAtivoTrue(String clinicaId);
 
-    Page<Paciente> findByAtivoTrue(Pageable pageable);
+    Page<Paciente> findByClinicaIdAndAtivoTrue(String clinicaId, Pageable pageable);
 
-    Page<Paciente> findByAtivoTrueAndNomeCompletoContainingIgnoreCase(String nomeCompleto, Pageable pageable);
+    Page<Paciente> findByClinicaIdAndAtivoTrueAndNomeCompletoContainingIgnoreCase(
+            String clinicaId, String nomeCompleto, Pageable pageable);
+
+    Optional<Paciente> findByIdAndClinicaId(String id, String clinicaId);
 }

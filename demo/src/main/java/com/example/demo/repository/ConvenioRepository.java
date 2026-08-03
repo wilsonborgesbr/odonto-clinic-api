@@ -7,7 +7,11 @@ import java.util.Optional;
 
 public interface ConvenioRepository extends MongoRepository<Convenio, String> {
 
-    Optional<Convenio> findByCnpj(String cnpj);
+    Optional<Convenio> findByCnpjAndClinicaId(String cnpj, String clinicaId);
 
-    List<Convenio> findByAtivoTrue();
+    List<Convenio> findByClinicaIdAndAtivoTrue(String clinicaId);
+
+    List<Convenio> findByClinicaId(String clinicaId);
+
+    Optional<Convenio> findByIdAndClinicaId(String id, String clinicaId);
 }

@@ -7,7 +7,9 @@ import java.util.Optional;
 
 public interface OdontogramaRepository extends MongoRepository<Odontograma, String> {
 
-    List<Odontograma> findByPacienteId(String pacienteId);
+    List<Odontograma> findByClinicaIdAndPacienteId(String clinicaId, String pacienteId);
 
-    Optional<Odontograma> findTopByPacienteIdOrderByCreatedAtDesc(String pacienteId);
+    Optional<Odontograma> findTopByClinicaIdAndPacienteIdOrderByCreatedAtDesc(String clinicaId, String pacienteId);
+
+    Optional<Odontograma> findByIdAndClinicaId(String id, String clinicaId);
 }

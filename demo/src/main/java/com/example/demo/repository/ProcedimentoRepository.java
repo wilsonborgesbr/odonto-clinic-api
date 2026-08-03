@@ -9,9 +9,11 @@ import java.util.List;
 
 public interface ProcedimentoRepository extends MongoRepository<Procedimento, String> {
 
-    List<Procedimento> findByPacienteId(String pacienteId);
+    List<Procedimento> findByClinicaId(String clinicaId);
 
-    List<Procedimento> findByPacienteIdAndStatus(String pacienteId, StatusProcedimentoEnum status);
+    List<Procedimento> findByClinicaIdAndPacienteId(String clinicaId, String pacienteId);
 
-    List<Procedimento> findByNomeProcedimento(NomeProcedimentoEnum nomeProcedimento);
+    List<Procedimento> findByClinicaIdAndPacienteIdAndStatus(String clinicaId, String pacienteId, StatusProcedimentoEnum status);
+
+    java.util.Optional<Procedimento> findByIdAndClinicaId(String id, String clinicaId);
 }

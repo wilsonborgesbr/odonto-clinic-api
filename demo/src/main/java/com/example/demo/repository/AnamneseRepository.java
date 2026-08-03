@@ -7,7 +7,9 @@ import java.util.Optional;
 
 public interface AnamneseRepository extends MongoRepository<Anamnese, String> {
 
-    List<Anamnese> findByPacienteId(String pacienteId);
+    List<Anamnese> findByClinicaIdAndPacienteId(String clinicaId, String pacienteId);
 
-    Optional<Anamnese> findTopByPacienteIdOrderByCreatedAtDesc(String pacienteId);
+    Optional<Anamnese> findTopByClinicaIdAndPacienteIdOrderByCreatedAtDesc(String clinicaId, String pacienteId);
+
+    Optional<Anamnese> findByIdAndClinicaId(String id, String clinicaId);
 }

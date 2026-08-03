@@ -10,9 +10,11 @@ import java.util.Optional;
 
 public interface FuncionarioRepository extends MongoRepository<Funcionario, String> {
 
-    Optional<Funcionario> findByCpf(String cpf);
+    Optional<Funcionario> findByCpfAndClinicaId(String cpf, String clinicaId);
 
-    List<Funcionario> findByAtivoTrue();
+    List<Funcionario> findByClinicaIdAndAtivoTrue(String clinicaId);
 
-    Page<Funcionario> findByAtivoTrue(Pageable pageable);
+    Page<Funcionario> findByClinicaIdAndAtivoTrue(String clinicaId, Pageable pageable);
+
+    Optional<Funcionario> findByIdAndClinicaId(String id, String clinicaId);
 }

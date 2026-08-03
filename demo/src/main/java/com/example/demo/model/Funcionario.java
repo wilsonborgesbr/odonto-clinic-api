@@ -24,6 +24,9 @@ public class Funcionario {
     @Id
     private String id;
 
+    @Indexed
+    private String clinicaId;
+
     @NotBlank(message = "Nome completo é obrigatório")
     private String nomeCompleto;
 

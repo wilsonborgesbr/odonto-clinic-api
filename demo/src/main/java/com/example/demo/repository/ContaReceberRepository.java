@@ -9,9 +9,11 @@ import java.util.List;
 
 public interface ContaReceberRepository extends MongoRepository<ContaReceber, String> {
 
-    List<ContaReceber> findByPacienteId(String pacienteId);
+    List<ContaReceber> findByClinicaId(String clinicaId);
 
-    List<ContaReceber> findByStatus(StatusFinanceiroEnum status);
+    List<ContaReceber> findByClinicaIdAndPacienteId(String clinicaId, String pacienteId);
 
-    List<ContaReceber> findByDataVencimentoBefore(LocalDate data);
+    List<ContaReceber> findByClinicaIdAndStatus(String clinicaId, StatusFinanceiroEnum status);
+
+    java.util.Optional<ContaReceber> findByIdAndClinicaId(String id, String clinicaId);
 }

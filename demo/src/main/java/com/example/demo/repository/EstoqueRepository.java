@@ -7,7 +7,9 @@ import java.util.List;
 
 public interface EstoqueRepository extends MongoRepository<Estoque, String> {
 
-    List<Estoque> findByQuantidadeAtualLessThanEqual(Integer quantidade);
+    List<Estoque> findByClinicaId(String clinicaId);
 
-    List<Estoque> findByCategoria(CategoriaEstoqueEnum categoria);
+    List<Estoque> findByClinicaIdAndCategoria(String clinicaId, CategoriaEstoqueEnum categoria);
+
+    java.util.Optional<Estoque> findByIdAndClinicaId(String id, String clinicaId);
 }

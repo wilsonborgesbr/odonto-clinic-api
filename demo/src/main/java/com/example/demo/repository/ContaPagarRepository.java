@@ -8,5 +8,9 @@ import java.util.List;
 
 public interface ContaPagarRepository extends MongoRepository<ContaPagar, String> {
 
-    List<ContaPagar> findByStatus(StatusFinanceiroEnum status);
+    List<ContaPagar> findByClinicaId(String clinicaId);
+
+    List<ContaPagar> findByClinicaIdAndStatus(String clinicaId, StatusFinanceiroEnum status);
+
+    java.util.Optional<ContaPagar> findByIdAndClinicaId(String id, String clinicaId);
 }

@@ -21,6 +21,9 @@ public class Odontograma {
     private String id;
 
     @Indexed
+    private String clinicaId;
+
+    @Indexed
     private String pacienteId;
 
     private String dentistaId;
