@@ -1,19 +1,18 @@
 package com.example.demo.service;
 
-import com.example.demo.model.Paciente;
-import com.example.demo.model.Endereco;
 import com.example.demo.dto.PacienteListagemDTO;
+import com.example.demo.model.Endereco;
+import com.example.demo.model.Paciente;
 import com.example.demo.repository.PacienteRepository;
+import com.example.demo.security.AuthContextHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,16 +22,14 @@ public class PacienteService {
     private PacienteRepository pacienteRepository;
 
     public Paciente criar(Paciente paciente) {
-        // Verifica se já existe um paciente com o mesmo CPF
-        if (pacienteRepository.findByCpf(paciente.getCpf()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado.");
+        String clinicaId = AuthContextHelper.currentClinicaId();
+
+        if (pacienteRepository.findByCpfAndClinicaId(paciente.getCpf(), clinicaId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
         }
 
-        // Gera automaticamente o numeroProntuario como um UUID curto (8 caracteres)
-        String numeroProntuario = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        paciente.setNumeroProntuario(numeroProntuario);
-
-        // Preenche os campos administrativos iniciais
+        paciente.setClinicaId(clinicaId);
+        paciente.setNumeroProntuario(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         paciente.setAtivo(true);
         paciente.setCreatedAt(LocalDateTime.now());
         paciente.setUpdatedAt(LocalDateTime.now());
@@ -41,7 +38,8 @@ public class PacienteService {
     }
 
     public Page<PacienteListagemDTO> listarTodos(Pageable pageable) {
-        return pacienteRepository.findByAtivoTrue(pageable)
+        return pacienteRepository
+                .findByClinicaIdAndAtivoTrue(AuthContextHelper.currentClinicaId(), pageable)
                 .map(PacienteListagemDTO::new);
     }
 
@@ -50,51 +48,47 @@ public class PacienteService {
             return listarTodos(pageable);
         }
         return pacienteRepository
-                .findByAtivoTrueAndNomeCompletoContainingIgnoreCase(nome.trim(), pageable)
+                .findByClinicaIdAndAtivoTrueAndNomeCompletoContainingIgnoreCase(
+                        AuthContextHelper.currentClinicaId(), nome.trim(), pageable)
                 .map(PacienteListagemDTO::new);
     }
 
     public Paciente buscarPorId(String id) {
-        return pacienteRepository.findById(id)
+        return pacienteRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .filter(Paciente::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado."));
     }
 
     public Paciente atualizar(String id, Paciente dadosAtualizados) {
-        Paciente pacienteExistente = pacienteRepository.findById(id)
+        String clinicaId = AuthContextHelper.currentClinicaId();
+        Paciente pacienteExistente = pacienteRepository.findByIdAndClinicaId(id, clinicaId)
                 .filter(Paciente::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado."));
 
-        // Se o CPF foi alterado, verifica se o novo CPF já está cadastrado em outro paciente
-        if (!pacienteExistente.getCpf().equals(dadosAtualizados.getCpf())) {
-            if (pacienteRepository.findByCpf(dadosAtualizados.getCpf()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado.");
-            }
+        if (!pacienteExistente.getCpf().equals(dadosAtualizados.getCpf())
+                && pacienteRepository.findByCpfAndClinicaId(dadosAtualizados.getCpf(), clinicaId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
         }
 
-        // Atualização de Dados Pessoais
         pacienteExistente.setNomeCompleto(dadosAtualizados.getNomeCompleto());
         pacienteExistente.setCpf(dadosAtualizados.getCpf());
-        pacienteExistente.setRg(dadosAtualizados.getCpf()); // Mapeamento correto de RG
         pacienteExistente.setRg(dadosAtualizados.getRg());
         pacienteExistente.setDataNascimento(dadosAtualizados.getDataNascimento());
         pacienteExistente.setSexo(dadosAtualizados.getSexo());
         pacienteExistente.setEstadoCivil(dadosAtualizados.getEstadoCivil());
         pacienteExistente.setProfissao(dadosAtualizados.getProfissao());
 
-        // Atualização de Contato
         pacienteExistente.setEmail(dadosAtualizados.getEmail());
         pacienteExistente.setTelefoneCelular(dadosAtualizados.getTelefoneCelular());
         pacienteExistente.setTelefoneFixo(dadosAtualizados.getTelefoneFixo());
         pacienteExistente.setNomeContatoEmergencia(dadosAtualizados.getNomeContatoEmergencia());
-        pacienteExistente.setTelefoneEmergencia(dadosAuthorized(dadosAtualizados.getTelefoneEmergencia()));
+        pacienteExistente.setTelefoneEmergencia(dadosAtualizados.getTelefoneEmergencia());
 
-        // Atualização de Endereço
         if (dadosAtualizados.getEndereco() != null) {
-            Endereco end = pacienteExistente.getEndereco();
-            if (end == null) {
-                end = new Endereco();
-            }
+            Endereco end = pacienteExistente.getEndereco() != null
+                    ? pacienteExistente.getEndereco()
+                    : new Endereco();
             end.setCep(dadosAtualizados.getEndereco().getCep());
             end.setLogradouro(dadosAtualizados.getEndereco().getLogradouro());
             end.setNumero(dadosAtualizados.getEndereco().getNumero());
@@ -107,43 +101,32 @@ public class PacienteService {
             pacienteExistente.setEndereco(null);
         }
 
-        // Atualização de Dados Clínicos
         pacienteExistente.setTipoSanguineo(dadosAtualizados.getTipoSanguineo());
-
-        // Atualização de Dados Administrativos
         pacienteExistente.setTipoPaciente(dadosAtualizados.getTipoPaciente());
+        pacienteExistente.setConvenioId(dadosAtualizados.getConvenioId());
         pacienteExistente.setTipoPagamento(dadosAtualizados.getTipoPagamento());
         pacienteExistente.setComoConheceu(dadosAtualizados.getComoConheceu());
-
-        // Atualiza a data de modificação
         pacienteExistente.setUpdatedAt(LocalDateTime.now());
 
         return pacienteRepository.save(pacienteExistente);
     }
 
     public void deletar(String id) {
-        Paciente pacienteExistente = pacienteRepository.findById(id)
+        Paciente p = pacienteRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .filter(Paciente::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado."));
-
-        // Soft delete: inativa o paciente e atualiza a data de modificação
-        pacienteExistente.setAtivo(false);
-        pacienteExistente.setUpdatedAt(LocalDateTime.now());
-
-        pacienteRepository.save(pacienteExistente);
+        p.setAtivo(false);
+        p.setUpdatedAt(LocalDateTime.now());
+        pacienteRepository.save(p);
     }
 
     public Paciente reativar(String id) {
-        Paciente pacienteExistente = pacienteRepository.findById(id)
+        Paciente p = pacienteRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado."));
-
-        pacienteExistente.setAtivo(true);
-        pacienteExistente.setUpdatedAt(LocalDateTime.now());
-
-        return pacienteRepository.save(pacienteExistente);
-    }
-
-    private String dadosAuthorized(String val) {
-        return val;
+        p.setAtivo(true);
+        p.setUpdatedAt(LocalDateTime.now());
+        return pacienteRepository.save(p);
     }
 }

@@ -1,18 +1,17 @@
 package com.example.demo.service;
 
-import com.example.demo.model.Funcionario;
 import com.example.demo.dto.FuncionarioListagemDTO;
+import com.example.demo.model.Funcionario;
 import com.example.demo.repository.FuncionarioRepository;
+import com.example.demo.security.AuthContextHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class FuncionarioService {
@@ -21,10 +20,12 @@ public class FuncionarioService {
     private FuncionarioRepository funcionarioRepository;
 
     public Funcionario criar(Funcionario funcionario) {
-        if (funcionarioRepository.findByCpf(funcionario.getCpf()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado.");
+        String clinicaId = AuthContextHelper.currentClinicaId();
+        if (funcionarioRepository.findByCpfAndClinicaId(funcionario.getCpf(), clinicaId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
         }
 
+        funcionario.setClinicaId(clinicaId);
         funcionario.setAtivo(true);
         funcionario.setCreatedAt(LocalDateTime.now());
         funcionario.setUpdatedAt(LocalDateTime.now());
@@ -33,55 +34,57 @@ public class FuncionarioService {
     }
 
     public Page<FuncionarioListagemDTO> listarTodos(Pageable pageable) {
-        return funcionarioRepository.findByAtivoTrue(pageable)
+        return funcionarioRepository
+                .findByClinicaIdAndAtivoTrue(AuthContextHelper.currentClinicaId(), pageable)
                 .map(FuncionarioListagemDTO::new);
     }
 
     public Funcionario buscarPorId(String id) {
-        return funcionarioRepository.findById(id)
+        return funcionarioRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .filter(Funcionario::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
     }
 
     public Funcionario atualizar(String id, Funcionario dadosAtualizados) {
-        Funcionario funcionarioExistente = funcionarioRepository.findById(id)
+        String clinicaId = AuthContextHelper.currentClinicaId();
+        Funcionario existente = funcionarioRepository.findByIdAndClinicaId(id, clinicaId)
                 .filter(Funcionario::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
 
-        if (!funcionarioExistente.getCpf().equals(dadosAtualizados.getCpf())) {
-            if (funcionarioRepository.findByCpf(dadosAtualizados.getCpf()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado.");
-            }
+        if (!existente.getCpf().equals(dadosAtualizados.getCpf())
+                && funcionarioRepository.findByCpfAndClinicaId(dadosAtualizados.getCpf(), clinicaId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
         }
 
-        funcionarioExistente.setNomeCompleto(dadosAtualizados.getNomeCompleto());
-        funcionarioExistente.setCpf(dadosAtualizados.getCpf());
-        funcionarioExistente.setCargo(dadosAtualizados.getCargo());
-        funcionarioExistente.setEmail(dadosAtualizados.getEmail());
-        funcionarioExistente.setTelefoneCelular(dadosAtualizados.getTelefoneCelular());
-        funcionarioExistente.setUpdatedAt(LocalDateTime.now());
+        existente.setNomeCompleto(dadosAtualizados.getNomeCompleto());
+        existente.setCpf(dadosAtualizados.getCpf());
+        existente.setCargo(dadosAtualizados.getCargo());
+        existente.setEmail(dadosAtualizados.getEmail());
+        existente.setTelefoneCelular(dadosAtualizados.getTelefoneCelular());
+        existente.setSexo(dadosAtualizados.getSexo());
+        existente.setEndereco(dadosAtualizados.getEndereco());
+        existente.setUpdatedAt(LocalDateTime.now());
 
-        return funcionarioRepository.save(funcionarioExistente);
+        return funcionarioRepository.save(existente);
     }
 
     public void deletar(String id) {
-        Funcionario funcionarioExistente = funcionarioRepository.findById(id)
+        Funcionario f = funcionarioRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .filter(Funcionario::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
-
-        funcionarioExistente.setAtivo(false);
-        funcionarioExistente.setUpdatedAt(LocalDateTime.now());
-
-        funcionarioRepository.save(funcionarioExistente);
+        f.setAtivo(false);
+        f.setUpdatedAt(LocalDateTime.now());
+        funcionarioRepository.save(f);
     }
 
     public Funcionario reativar(String id) {
-        Funcionario funcionarioExistente = funcionarioRepository.findById(id)
+        Funcionario f = funcionarioRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
-
-        funcionarioExistente.setAtivo(true);
-        funcionarioExistente.setUpdatedAt(LocalDateTime.now());
-
-        return funcionarioRepository.save(funcionarioExistente);
+        f.setAtivo(true);
+        f.setUpdatedAt(LocalDateTime.now());
+        return funcionarioRepository.save(f);
     }
 }

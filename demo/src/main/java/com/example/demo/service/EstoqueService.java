@@ -3,13 +3,13 @@ package com.example.demo.service;
 import com.example.demo.enums.CategoriaEstoqueEnum;
 import com.example.demo.model.Estoque;
 import com.example.demo.repository.EstoqueRepository;
+import com.example.demo.security.AuthContextHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,39 +19,36 @@ public class EstoqueService {
     private EstoqueRepository estoqueRepository;
 
     public Estoque criar(Estoque estoque) {
+        estoque.setClinicaId(AuthContextHelper.currentClinicaId());
         estoque.setCreatedAt(LocalDateTime.now());
         estoque.setUpdatedAt(LocalDateTime.now());
         return estoqueRepository.save(estoque);
     }
 
     public List<Estoque> listarTodos() {
-        return estoqueRepository.findAll();
+        return estoqueRepository.findByClinicaId(AuthContextHelper.currentClinicaId());
     }
 
     public List<Estoque> listarAbaixoDoMinimo() {
-        List<Estoque> todos = estoqueRepository.findAll();
-        List<Estoque> abaixoMinimo = new ArrayList<>();
-        for (Estoque item : todos) {
-            List<Estoque> matches = estoqueRepository.findByQuantidadeAtualLessThanEqual(item.getQuantidadeMinima());
-            if (matches.stream().anyMatch(m -> m.getId().equals(item.getId()))) {
-                abaixoMinimo.add(item);
-            }
-        }
-        return abaixoMinimo;
+        return listarTodos().stream()
+                .filter(e -> e.getQuantidadeMinima() != null && e.getQuantidadeAtual() != null
+                        && e.getQuantidadeAtual() <= e.getQuantidadeMinima())
+                .toList();
     }
 
     public List<Estoque> buscarPorCategoria(CategoriaEstoqueEnum categoria) {
-        return estoqueRepository.findByCategoria(categoria);
+        return estoqueRepository.findByClinicaIdAndCategoria(
+                AuthContextHelper.currentClinicaId(), categoria);
     }
 
     public Estoque buscarPorId(String id) {
-        return estoqueRepository.findById(id)
+        return estoqueRepository
+                .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item não encontrado no estoque."));
     }
 
     public Estoque atualizar(String id, Estoque dadosAtualizados) {
-        Estoque estoqueExistente = estoqueRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item não encontrado no estoque."));
+        Estoque estoqueExistente = buscarPorId(id);
 
         estoqueExistente.setNomeMaterial(dadosAtualizados.getNomeMaterial());
         estoqueExistente.setCategoria(dadosAtualizados.getCategoria());
@@ -60,6 +57,7 @@ public class EstoqueService {
         estoqueExistente.setUnidadeMedida(dadosAtualizados.getUnidadeMedida());
         estoqueExistente.setFornecedor(dadosAtualizados.getFornecedor());
         estoqueExistente.setDataValidade(dadosAtualizados.getDataValidade());
+        estoqueExistente.setValorCompra(dadosAtualizados.getValorCompra());
         estoqueExistente.setObservacoes(dadosAtualizados.getObservacoes());
         estoqueExistente.setUpdatedAt(LocalDateTime.now());
 
@@ -67,9 +65,6 @@ public class EstoqueService {
     }
 
     public void deletar(String id) {
-        Estoque estoqueExistente = estoqueRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item não encontrado no estoque."));
-
-        estoqueRepository.delete(estoqueExistente);
+        estoqueRepository.delete(buscarPorId(id));
     }
 }
