@@ -4,11 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,10 +37,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configuramos quais rotas são públicas e quais são privadas
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll() // Rota pública
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() // Rota pública
-                        .requestMatchers("/error").permitAll() // Permite a rota de erro do Spring para não retornar 403 quando ocorre um erro interno (como falha no banco)
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Permite acesso ao Swagger UI e documentação
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register-clinica").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // Qualquer outra requisição precisa de um token válido
                 )
                 // Adicionamos nosso filtro antes do filtro padrão do Spring Security
@@ -48,13 +48,19 @@ public class SecurityConfig {
                 .build();
     }
 
-    // Configuração para permitir a injeção do AuthenticationManager no AuthController
+    /**
+     * Autenticação real acontece no {@code AuthController} via BCrypt manual —
+     * o Spring Security só valida o JWT via {@link SecurityFilter}. Este
+     * UserDetailsService vazio evita que o Spring Boot logue uma senha padrão
+     * e crie um user "user" default no startup.
+     */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public UserDetailsService userDetailsService() {
+        return (String username) -> {
+            throw new UsernameNotFoundException("Autenticação por username não é usada — use POST /auth/login");
+        };
     }
 
-    // Configuração do algoritmo de hash da senha
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -42,4 +42,16 @@ public class AnamneseController {
         Anamnese anamnese = anamneseService.buscarPorId(id);
         return ResponseEntity.ok(anamnese);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Anamnese> atualizar(@PathVariable String id, @RequestBody @Valid Anamnese anamnese) {
+        Anamnese atualizada = anamneseService.atualizar(id, anamnese);
+        return ResponseEntity.ok(atualizada);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable String id) {
+        anamneseService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }

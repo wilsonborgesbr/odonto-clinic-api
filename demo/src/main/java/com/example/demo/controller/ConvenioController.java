@@ -48,4 +48,10 @@ public class ConvenioController {
         convenioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<Convenio> reativar(@PathVariable String id) {
+        Convenio convenio = convenioService.reativar(id);
+        return ResponseEntity.ok(convenio);
+    }
 }

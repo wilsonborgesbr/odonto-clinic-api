@@ -26,6 +26,12 @@ public class ProcedimentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(novoProcedimento);
     }
 
+    @GetMapping
+    public ResponseEntity<List<Procedimento>> listarTodos() {
+        List<Procedimento> procedimentos = procedimentoService.listarTodos();
+        return ResponseEntity.ok(procedimentos);
+    }
+
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<Procedimento>> listarPorPaciente(@PathVariable String pacienteId) {
         List<Procedimento> procedimentos = procedimentoService.listarPorPaciente(pacienteId);

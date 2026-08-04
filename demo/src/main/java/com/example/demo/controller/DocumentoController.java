@@ -25,6 +25,12 @@ public class DocumentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(novoDocumento);
     }
 
+    @GetMapping
+    public ResponseEntity<List<Documento>> listarTodos() {
+        List<Documento> documentos = documentoService.listarTodos();
+        return ResponseEntity.ok(documentos);
+    }
+
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<Documento>> listarPorPaciente(@PathVariable String pacienteId) {
         List<Documento> documentos = documentoService.listarPorPaciente(pacienteId);
