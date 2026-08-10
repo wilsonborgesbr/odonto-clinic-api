@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.enums.CategoriaEstoqueEnum;
 import com.example.demo.model.Estoque;
 import com.example.demo.repository.EstoqueRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,10 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.example.demo.service.TenantTestSupport.TEST_CLINICA_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -35,8 +36,10 @@ class EstoqueServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantTestSupport.loginTestUser();
         itemEstoque = Estoque.builder()
                 .id("est-123")
+                .clinicaId(TEST_CLINICA_ID)
                 .nomeMaterial("Luva de Procedimento Látex")
                 .categoria(CategoriaEstoqueEnum.EPI)
                 .quantidadeAtual(10)
@@ -48,13 +51,20 @@ class EstoqueServiceTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantTestSupport.logout();
+    }
+
     @Test
-    void criar_DeveDefinirTimestamps() {
-        when(estoqueRepository.save(any(Estoque.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void criar_DeveDefinirTimestampsEClinicaId() {
+        when(estoqueRepository.save(any(Estoque.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Estoque resultado = estoqueService.criar(itemEstoque);
 
         assertNotNull(resultado);
+        assertEquals(TEST_CLINICA_ID, resultado.getClinicaId());
         assertNotNull(resultado.getCreatedAt());
         assertNotNull(resultado.getUpdatedAt());
         verify(estoqueRepository, times(1)).save(any(Estoque.class));
@@ -62,11 +72,11 @@ class EstoqueServiceTest {
 
     @Test
     void buscarPorId_Inexistente_DeveLancarExcecao() {
-        when(estoqueRepository.findById("invalido")).thenReturn(Optional.empty());
+        when(estoqueRepository.findByIdAndClinicaId("invalido", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            estoqueService.buscarPorId("invalido");
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> estoqueService.buscarPorId("invalido"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Item não encontrado no estoque.", exception.getReason());
@@ -76,6 +86,7 @@ class EstoqueServiceTest {
     void listarAbaixoDoMinimo_DeveFiltrarItensAbaixoOuIgualAoMinimo() {
         Estoque item1 = Estoque.builder()
                 .id("est-1")
+                .clinicaId(TEST_CLINICA_ID)
                 .nomeMaterial("Mascara Descartavel")
                 .quantidadeAtual(2)
                 .quantidadeMinima(5) // Abaixo do mínimo!
@@ -83,17 +94,15 @@ class EstoqueServiceTest {
 
         Estoque item2 = Estoque.builder()
                 .id("est-2")
+                .clinicaId(TEST_CLINICA_ID)
                 .nomeMaterial("Alcool 70%")
                 .quantidadeAtual(10)
-                .quantidadeMinima(5) // Acima do mínimo!
+                .quantidadeMinima(5) // Acima do mínimo
                 .build();
 
-        when(estoqueRepository.findAll()).thenReturn(Arrays.asList(item1, item2));
-        
-        // Mock a query para item1 (quantidadeMinima = 5)
-        // O item1 (quantidadeAtual = 2) está abaixo ou igual a 5. Então findByQuantidadeAtualLessThanEqual(5) deve conter item1.
-        when(estoqueRepository.findByQuantidadeAtualLessThanEqual(5)).thenReturn(Arrays.asList(item1));
-        
+        when(estoqueRepository.findByClinicaId(TEST_CLINICA_ID))
+                .thenReturn(Arrays.asList(item1, item2));
+
         List<Estoque> resultado = estoqueService.listarAbaixoDoMinimo();
 
         assertEquals(1, resultado.size());
@@ -113,8 +122,10 @@ class EstoqueServiceTest {
                 .observacoes("Tamanho G")
                 .build();
 
-        when(estoqueRepository.findById("est-123")).thenReturn(Optional.of(itemEstoque));
-        when(estoqueRepository.save(any(Estoque.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(estoqueRepository.findByIdAndClinicaId("est-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(itemEstoque));
+        when(estoqueRepository.save(any(Estoque.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Estoque resultado = estoqueService.atualizar("est-123", dadosNovos);
 
@@ -127,7 +138,8 @@ class EstoqueServiceTest {
 
     @Test
     void deletar_DeveRemoverFisicamente() {
-        when(estoqueRepository.findById("est-123")).thenReturn(Optional.of(itemEstoque));
+        when(estoqueRepository.findByIdAndClinicaId("est-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(itemEstoque));
         doNothing().when(estoqueRepository).delete(any(Estoque.class));
 
         estoqueService.deletar("est-123");

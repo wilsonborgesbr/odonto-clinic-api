@@ -4,6 +4,7 @@ import com.example.demo.enums.CategoriaContaPagarEnum;
 import com.example.demo.enums.StatusFinanceiroEnum;
 import com.example.demo.model.ContaPagar;
 import com.example.demo.repository.ContaPagarRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static com.example.demo.service.TenantTestSupport.TEST_CLINICA_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -33,8 +35,10 @@ class ContaPagarServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantTestSupport.loginTestUser();
         contaPagarPendente = ContaPagar.builder()
                 .id("despesa-123")
+                .clinicaId(TEST_CLINICA_ID)
                 .descricao("Compra de luvas e máscaras")
                 .categoria(CategoriaContaPagarEnum.MATERIAL_ODONTOLOGICO)
                 .fornecedor("Dental Cremer")
@@ -44,13 +48,20 @@ class ContaPagarServiceTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantTestSupport.logout();
+    }
+
     @Test
-    void criar_DeveDefinirDatasEStatusPadrante() {
-        when(contaPagarRepository.save(any(ContaPagar.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void criar_DeveDefinirDatasEStatusPadrao() {
+        when(contaPagarRepository.save(any(ContaPagar.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         ContaPagar resultado = contaPagarService.criar(contaPagarPendente);
 
         assertNotNull(resultado);
+        assertEquals(TEST_CLINICA_ID, resultado.getClinicaId());
         assertNotNull(resultado.getCreatedAt());
         assertNotNull(resultado.getUpdatedAt());
         assertEquals(StatusFinanceiroEnum.PENDENTE, resultado.getStatus());
@@ -60,7 +71,8 @@ class ContaPagarServiceTest {
     @Test
     void criar_ComStatusPagoEDataNula_DeveDefinirDataPagamentoComoHoje() {
         contaPagarPendente.setStatus(StatusFinanceiroEnum.PAGO);
-        when(contaPagarRepository.save(any(ContaPagar.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(contaPagarRepository.save(any(ContaPagar.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         ContaPagar resultado = contaPagarService.criar(contaPagarPendente);
 
@@ -70,11 +82,11 @@ class ContaPagarServiceTest {
 
     @Test
     void buscarPorId_Inexistente_DeveLancarExcecao() {
-        when(contaPagarRepository.findById("invalido")).thenReturn(Optional.empty());
+        when(contaPagarRepository.findByIdAndClinicaId("invalido", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            contaPagarService.buscarPorId("invalido");
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> contaPagarService.buscarPorId("invalido"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Conta a pagar não encontrada.", exception.getReason());
@@ -89,8 +101,10 @@ class ContaPagarServiceTest {
                 .valor(350.0)
                 .build();
 
-        when(contaPagarRepository.findById("despesa-123")).thenReturn(Optional.of(contaPagarPendente));
-        when(contaPagarRepository.save(any(ContaPagar.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(contaPagarRepository.findByIdAndClinicaId("despesa-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(contaPagarPendente));
+        when(contaPagarRepository.save(any(ContaPagar.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         ContaPagar resultado = contaPagarService.atualizar("despesa-123", dadosAtualizacao);
 

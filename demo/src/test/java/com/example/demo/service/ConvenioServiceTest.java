@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.Convenio;
 import com.example.demo.repository.ConvenioRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+import static com.example.demo.service.TenantTestSupport.TEST_CLINICA_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -30,8 +32,10 @@ class ConvenioServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantTestSupport.loginTestUser();
         convenio = Convenio.builder()
                 .id("conv-123")
+                .clinicaId(TEST_CLINICA_ID)
                 .nome("Bradesco Dental")
                 .cnpj("12.345.678/0001-90")
                 .telefone("(11) 4004-0019")
@@ -41,14 +45,22 @@ class ConvenioServiceTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantTestSupport.logout();
+    }
+
     @Test
     void criar_DeveSalvarConvenioComAtivoETimestamps() {
-        when(convenioRepository.findByCnpj(convenio.getCnpj())).thenReturn(Optional.empty());
-        when(convenioRepository.save(any(Convenio.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(convenioRepository.findByCnpjAndClinicaId(convenio.getCnpj(), TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
+        when(convenioRepository.save(any(Convenio.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Convenio resultado = convenioService.criar(convenio);
 
         assertNotNull(resultado);
+        assertEquals(TEST_CLINICA_ID, resultado.getClinicaId());
         assertTrue(resultado.getAtivo());
         assertNotNull(resultado.getCreatedAt());
         assertNotNull(resultado.getUpdatedAt());
@@ -57,24 +69,24 @@ class ConvenioServiceTest {
 
     @Test
     void criar_ComCnpjDuplicado_DeveLancarExcecao() {
-        when(convenioRepository.findByCnpj(convenio.getCnpj())).thenReturn(Optional.of(convenio));
+        when(convenioRepository.findByCnpjAndClinicaId(convenio.getCnpj(), TEST_CLINICA_ID))
+                .thenReturn(Optional.of(convenio));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            convenioService.criar(convenio);
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> convenioService.criar(convenio));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("CNPJ já cadastrado.", exception.getReason());
+        assertEquals("CNPJ já cadastrado nesta clínica.", exception.getReason());
         verify(convenioRepository, never()).save(any(Convenio.class));
     }
 
     @Test
     void buscarPorId_InexistenteOuInativo_DeveLancarExcecao() {
-        when(convenioRepository.findById("invalido")).thenReturn(Optional.empty());
+        when(convenioRepository.findByIdAndClinicaId("invalido", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            convenioService.buscarPorId("invalido");
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> convenioService.buscarPorId("invalido"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Convênio não encontrado.", exception.getReason());
@@ -90,8 +102,10 @@ class ConvenioServiceTest {
                 .tabelaDePrecos("Tabela Premium")
                 .build();
 
-        when(convenioRepository.findById("conv-123")).thenReturn(Optional.of(convenio));
-        when(convenioRepository.save(any(Convenio.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(convenioRepository.findByIdAndClinicaId("conv-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(convenio));
+        when(convenioRepository.save(any(Convenio.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Convenio resultado = convenioService.atualizar("conv-123", dadosAtualizados);
 
@@ -114,21 +128,24 @@ class ConvenioServiceTest {
                 .cnpj("99.999.999/9999-99")
                 .build();
 
-        when(convenioRepository.findById("conv-123")).thenReturn(Optional.of(convenio));
-        when(convenioRepository.findByCnpj("99.999.999/9999-99")).thenReturn(Optional.of(outroConvenio));
+        when(convenioRepository.findByIdAndClinicaId("conv-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(convenio));
+        when(convenioRepository.findByCnpjAndClinicaId("99.999.999/9999-99", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(outroConvenio));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            convenioService.atualizar("conv-123", dadosAtualizados);
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> convenioService.atualizar("conv-123", dadosAtualizados));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("CNPJ já cadastrado.", exception.getReason());
+        assertEquals("CNPJ já cadastrado nesta clínica.", exception.getReason());
     }
 
     @Test
     void deletar_DeveRealizarSoftDelete() {
-        when(convenioRepository.findById("conv-123")).thenReturn(Optional.of(convenio));
-        when(convenioRepository.save(any(Convenio.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(convenioRepository.findByIdAndClinicaId("conv-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(convenio));
+        when(convenioRepository.save(any(Convenio.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         convenioService.deletar("conv-123");
 

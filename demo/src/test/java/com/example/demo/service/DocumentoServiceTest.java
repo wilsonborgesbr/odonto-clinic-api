@@ -5,6 +5,7 @@ import com.example.demo.model.Documento;
 import com.example.demo.model.Paciente;
 import com.example.demo.repository.DocumentoRepository;
 import com.example.demo.repository.PacienteRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+import static com.example.demo.service.TenantTestSupport.TEST_CLINICA_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -38,8 +40,11 @@ class DocumentoServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantTestSupport.loginTestUser();
+
         documento = Documento.builder()
                 .id("doc-123")
+                .clinicaId(TEST_CLINICA_ID)
                 .pacienteId("pac-123")
                 .tipo(TipoDocumentoEnum.RADIOGRAFIA)
                 .urlArquivo("https://s3.amazonaws.com/clinica/radiografia123.jpg")
@@ -48,36 +53,46 @@ class DocumentoServiceTest {
 
         pacienteAtivo = Paciente.builder()
                 .id("pac-123")
+                .clinicaId(TEST_CLINICA_ID)
                 .nomeCompleto("Tainah Borges")
                 .ativo(true)
                 .build();
 
         pacienteInativo = Paciente.builder()
                 .id("pac-inactive")
+                .clinicaId(TEST_CLINICA_ID)
                 .nomeCompleto("Fulano Inativo")
                 .ativo(false)
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantTestSupport.logout();
+    }
+
     @Test
     void criar_ComPacienteAtivo_DeveSalvarComDataUpload() {
-        when(pacienteRepository.findById("pac-123")).thenReturn(Optional.of(pacienteAtivo));
-        when(documentoRepository.save(any(Documento.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(pacienteRepository.findByIdAndClinicaId("pac-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(pacienteAtivo));
+        when(documentoRepository.save(any(Documento.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Documento resultado = documentoService.criar(documento);
 
         assertNotNull(resultado);
+        assertEquals(TEST_CLINICA_ID, resultado.getClinicaId());
         assertNotNull(resultado.getDataUpload());
         verify(documentoRepository, times(1)).save(any(Documento.class));
     }
 
     @Test
     void criar_ComPacienteInexistente_DeveLancarExcecao() {
-        when(pacienteRepository.findById("pac-123")).thenReturn(Optional.empty());
+        when(pacienteRepository.findByIdAndClinicaId("pac-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            documentoService.criar(documento);
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> documentoService.criar(documento));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Paciente não encontrado ou inativo.", exception.getReason());
@@ -87,11 +102,11 @@ class DocumentoServiceTest {
     @Test
     void criar_ComPacienteInativo_DeveLancarExcecao() {
         documento.setPacienteId("pac-inactive");
-        when(pacienteRepository.findById("pac-inactive")).thenReturn(Optional.of(pacienteInativo));
+        when(pacienteRepository.findByIdAndClinicaId("pac-inactive", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(pacienteInativo));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            documentoService.criar(documento);
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> documentoService.criar(documento));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Paciente não encontrado ou inativo.", exception.getReason());
@@ -102,9 +117,8 @@ class DocumentoServiceTest {
     void criar_ComPacienteIdNulo_DeveLancarExcecao() {
         documento.setPacienteId(null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            documentoService.criar(documento);
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> documentoService.criar(documento));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("ID do paciente não pode ser nulo.", exception.getReason());
@@ -112,11 +126,11 @@ class DocumentoServiceTest {
 
     @Test
     void buscarPorId_Inexistente_DeveLancarExcecao() {
-        when(documentoRepository.findById("invalido")).thenReturn(Optional.empty());
+        when(documentoRepository.findByIdAndClinicaId("invalido", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            documentoService.buscarPorId("invalido");
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> documentoService.buscarPorId("invalido"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Documento não encontrado.", exception.getReason());
@@ -124,7 +138,8 @@ class DocumentoServiceTest {
 
     @Test
     void deletar_ComSucesso_DeveDeletarFisicamente() {
-        when(documentoRepository.findById("doc-123")).thenReturn(Optional.of(documento));
+        when(documentoRepository.findByIdAndClinicaId("doc-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(documento));
         doNothing().when(documentoRepository).delete(any(Documento.class));
 
         documentoService.deletar("doc-123");
@@ -134,11 +149,11 @@ class DocumentoServiceTest {
 
     @Test
     void deletar_Inexistente_DeveLancarExcecao() {
-        when(documentoRepository.findById("invalido")).thenReturn(Optional.empty());
+        when(documentoRepository.findByIdAndClinicaId("invalido", TEST_CLINICA_ID))
+                .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            documentoService.deletar("invalido");
-        });
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> documentoService.deletar("invalido"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Documento não encontrado.", exception.getReason());
