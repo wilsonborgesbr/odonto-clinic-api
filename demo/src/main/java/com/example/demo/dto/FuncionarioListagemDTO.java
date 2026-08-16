@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
 import com.example.demo.enums.CargoFuncionarioEnum;
+import com.example.demo.enums.SexoEnum;
+import com.example.demo.model.Endereco;
 import com.example.demo.model.Funcionario;
 
 public record FuncionarioListagemDTO(
@@ -10,7 +12,9 @@ public record FuncionarioListagemDTO(
         CargoFuncionarioEnum cargo,
         String email,
         String telefoneCelular,
-        Boolean ativo
+        Boolean ativo,
+        SexoEnum sexo,
+        Endereco endereco
 ) {
     public FuncionarioListagemDTO(Funcionario funcionario) {
         this(
@@ -20,7 +24,9 @@ public record FuncionarioListagemDTO(
                 funcionario.getCargo(),
                 funcionario.getEmail(),
                 funcionario.getTelefoneCelular(),
-                funcionario.getAtivo()
+                funcionario.getAtivo(),
+                funcionario.getSexo(),
+                funcionario.getEndereco()
         );
     }
 }

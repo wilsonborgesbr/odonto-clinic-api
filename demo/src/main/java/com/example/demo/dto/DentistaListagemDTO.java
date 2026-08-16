@@ -2,7 +2,9 @@ package com.example.demo.dto;
 
 import java.util.List;
 import com.example.demo.enums.EspecialidadeEnum;
+import com.example.demo.enums.SexoEnum;
 import com.example.demo.model.Dentista;
+import com.example.demo.model.Endereco;
 
 public record DentistaListagemDTO(
         String id,
@@ -11,7 +13,9 @@ public record DentistaListagemDTO(
         List<EspecialidadeEnum> especialidades,
         String email,
         String telefoneCelular,
-        Boolean ativo
+        Boolean ativo,
+        SexoEnum sexo,
+        Endereco endereco
 ) {
     public DentistaListagemDTO(Dentista dentista) {
         this(
@@ -21,7 +25,9 @@ public record DentistaListagemDTO(
                 dentista.getEspecialidades(),
                 dentista.getEmail(),
                 dentista.getTelefoneCelular(),
-                dentista.getAtivo()
+                dentista.getAtivo(),
+                dentista.getSexo(),
+                dentista.getEndereco()
         );
     }
 }
