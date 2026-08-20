@@ -14,7 +14,8 @@ public record FuncionarioListagemDTO(
         String telefoneCelular,
         Boolean ativo,
         SexoEnum sexo,
-        Endereco endereco
+        Endereco endereco,
+        String fotoUrl
 ) {
     public FuncionarioListagemDTO(Funcionario funcionario) {
         this(
@@ -26,7 +27,8 @@ public record FuncionarioListagemDTO(
                 funcionario.getTelefoneCelular(),
                 funcionario.getAtivo(),
                 funcionario.getSexo(),
-                funcionario.getEndereco()
+                funcionario.getEndereco(),
+                funcionario.getFotoUrl()
         );
     }
 }

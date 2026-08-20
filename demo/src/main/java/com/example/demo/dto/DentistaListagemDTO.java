@@ -15,7 +15,8 @@ public record DentistaListagemDTO(
         String telefoneCelular,
         Boolean ativo,
         SexoEnum sexo,
-        Endereco endereco
+        Endereco endereco,
+        String fotoUrl
 ) {
     public DentistaListagemDTO(Dentista dentista) {
         this(
@@ -27,7 +28,8 @@ public record DentistaListagemDTO(
                 dentista.getTelefoneCelular(),
                 dentista.getAtivo(),
                 dentista.getSexo(),
-                dentista.getEndereco()
+                dentista.getEndereco(),
+                dentista.getFotoUrl()
         );
     }
 }

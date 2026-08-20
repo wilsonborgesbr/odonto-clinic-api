@@ -74,6 +74,7 @@ public class Paciente {
 
     private TipoPagamento tipoPagamento;
     private ComoConheceu comoConheceu;
+    private String fotoUrl;
     private Boolean ativo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

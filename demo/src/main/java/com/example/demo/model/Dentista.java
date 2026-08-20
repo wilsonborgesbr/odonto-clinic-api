@@ -53,6 +53,8 @@ public class Dentista {
     @Valid
     private Endereco endereco;
 
+    private String fotoUrl;
+
     private Boolean ativo;
 
     private LocalDateTime createdAt;

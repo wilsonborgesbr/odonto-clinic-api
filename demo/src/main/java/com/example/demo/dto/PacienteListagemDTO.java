@@ -9,7 +9,8 @@ public record PacienteListagemDTO(
         String email,
         String telefoneCelular,
         Boolean ativo,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String fotoUrl
 ) {
     public PacienteListagemDTO(com.example.demo.model.Paciente paciente) {
         this(
@@ -19,7 +20,8 @@ public record PacienteListagemDTO(
                 paciente.getEmail(),
                 paciente.getTelefoneCelular(),
                 paciente.getAtivo(),
-                paciente.getCreatedAt()
+                paciente.getCreatedAt(),
+                paciente.getFotoUrl()
         );
     }
 }
