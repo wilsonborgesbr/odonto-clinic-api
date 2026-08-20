@@ -109,9 +109,9 @@ public class ProcedimentoService {
             cr.setProcedimentoId(p.getId());
             cr.setDescricao(parcelas > 1
                     ? String.format("Procedimento %s · parcela %d/%d",
-                            p.getNomeProcedimento() != null ? p.getNomeProcedimento().name() : "",
+                            p.getNomeProcedimento() != null ? p.getNomeProcedimento().getLabel() : "",
                             i + 1, parcelas)
-                    : "Procedimento " + (p.getNomeProcedimento() != null ? p.getNomeProcedimento().name() : ""));
+                    : "Procedimento " + (p.getNomeProcedimento() != null ? p.getNomeProcedimento().getLabel() : ""));
             cr.setValorTotal(valorParcela);
             cr.setValorPago(0.0);
             cr.setFormaPagamento(FormaPagamentoEnum.DINHEIRO);
