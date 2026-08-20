@@ -1,22 +1,61 @@
-# Odonto Clinic API
+# Bokka API — Backend
 
-![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen?logo=springboot&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
-![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?logo=apachemaven&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203-85EA2D?logo=swagger&logoColor=black)
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)](https://openjdk.org)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203-85EA2D?logo=swagger&logoColor=black)](https://swagger.io)
+[![Deploy](https://img.shields.io/badge/Deploy-VPS%20Linux-FCC624?logo=linux&logoColor=black)](https://api.bokka.com.br)
 
-API REST para gerenciamento completo de clínica odontológica. Cobre desde o cadastro de pacientes e dentistas até controle financeiro, estoque e documentos clínicos.
+API REST multi-tenant para gestão completa de clínicas odontológicas. Cobre desde cadastro de pacientes e dentistas até controle financeiro, estoque, odontograma, anamnese e documentos clínicos, com isolamento total de dados por clínica.
+
+🔗 **Produção:** [api.bokka.com.br](https://api.bokka.com.br)
+🔗 **Swagger UI:** [api.bokka.com.br/swagger-ui/index.html](https://api.bokka.com.br/swagger-ui/index.html)
+🔗 **Frontend:** [github.com/wilsonborgesbr/odonto-clinic-web](https://github.com/wilsonborgesbr/odonto-clinic-web) | [bokka.com.br](https://bokka.com.br)
+
+---
 
 ## Tecnologias
 
 - **Java 17** com **Spring Boot 4.0.6**
+- **Spring Security 6** + **JWT** (Auth0 java-jwt, HMAC256, BCrypt) — autenticação stateless
 - **Spring Data MongoDB** — persistência NoSQL
-- **Spring Security + JWT** (Auth0 java-jwt) — autenticação stateless
+- **MongoDB Atlas** (cloud) — banco de dados em produção
 - **Bean Validation** — validação de entrada
 - **Lombok** — redução de boilerplate
 - **Maven** — build e dependências
 - **SpringDoc OpenAPI** — documentação interativa via Swagger UI
+
+## Arquitetura
+
+### Multi-Tenant
+
+Isolamento de dados por `clinicaId` com índice composto. Cada clínica é um tenant independente:
+- **Login triplo:** código da clínica + email + senha
+- Um mesmo email pode existir em clínicas diferentes sem conflito
+- Todas as queries filtram automaticamente pelo tenant do usuário autenticado
+
+### RBAC (Role-Based Access Control)
+
+- **8 roles hierárquicos:** PROPRIETARIO, SOCIO, ADMINISTRADOR, DENTISTA, RECEPCIONISTA, FINANCEIRO, ESTOQUISTA, AUXILIAR_CLINICO
+- **14 permissões granulares** customizáveis por usuário individual
+- Permissões propagadas via **claims JWT** até o frontend (sidebar e botões condicionais)
+- Proteção do proprietário: não pode ser inativado nem ter role rebaixado
+
+### Escopo
+
+- **14 controllers**, **84 endpoints REST**, **16 entidades de domínio**, **18 enums**
+- **Módulos:** Autenticação, Pacientes, Dentistas, Funcionários, Agendamentos, Procedimentos, Odontograma, Anamnese, Documentos, Convênios, Estoque, Financeiro (contas a pagar/receber com parcelas e pagamento parcial), Usuários/Permissões
+
+## Regras de negócio
+
+- **Soft delete** em Pacientes, Dentistas, Funcionários, Convênios e Estoque
+- **Validação de duplicidade** no CPF (Paciente, Funcionário) e CRO (Dentista)
+- **Conflito de horário** — @Query customizada cobrindo os 4 cenários reais de sobreposição (não usa o método derivado do Spring Data, que cobria apenas 2)
+- **Validação de existência** — entidades referenciadas precisam existir e estar ativas
+- **Alerta de estoque mínimo** — endpoint dedicado para itens abaixo do limite
+- **Pagamento parcial** em Contas a Receber com atualização automática de status
+- **Proteção do proprietário** — não pode ser inativado nem rebaixado
 
 ## Como executar
 
@@ -32,15 +71,13 @@ cd odonto-clinic-api/demo
 ./mvnw spring-boot:run
 ```
 
-> API também disponível em produção: https://odonto-clinic-api-production.up.railway.app
-
 A API sobe na porta **8080** por padrão. Todos os endpoints (exceto `/auth/*`) exigem token JWT no header `Authorization: Bearer <token>`.
 
 ## Documentação interativa (Swagger)
 
-A API possui documentação interativa via Swagger UI, disponível em:
+Disponível em produção:
 
-https://odonto-clinic-api-production.up.railway.app/swagger-ui/index.html
+🔗 [api.bokka.com.br/swagger-ui/index.html](https://api.bokka.com.br/swagger-ui/index.html)
 
 ### Como testar
 
@@ -190,21 +227,23 @@ https://odonto-clinic-api-production.up.railway.app/swagger-ui/index.html
 
 ```
 demo/src/main/java/com/example/demo/
-├── config/             # SecurityConfig, SecurityFilter (JWT)
-├── controller/         # REST controllers
-├── dto/                # Data Transfer Objects (auth)
-├── enums/              # Enumerações de domínio
-├── model/              # Entidades / documentos MongoDB
+├── config/             # SecurityConfig, SecurityFilter (JWT), CORS
+├── controller/         # 14 REST controllers
+├── dto/                # Data Transfer Objects (auth, requests, responses)
+├── enums/              # 18 enumerações de domínio
+├── model/              # 16 entidades / documentos MongoDB
 ├── repository/         # Interfaces Spring Data MongoDB
 └── service/            # Regras de negócio
 ```
 
-## Regras de negócio relevantes
+## Infraestrutura
 
-- **Soft delete** em Pacientes, Dentistas, Funcionários, Convênios e Estoque — o registro é inativado, não excluído.
-- **Validação de duplicidade** no CPF (Paciente, Funcionário) e CRO (Dentista).
-- **Conflito de horário** no agendamento — a API impede que o mesmo dentista tenha dois atendimentos sobrepostos.
-- **Validação de existência** — ao criar agendamento, procedimento, anamnese ou odontograma, o paciente e/ou dentista referenciado precisa existir e estar ativo.
+- **VPS Linux** (Ubuntu 24.04) com **systemd** para gerenciamento do processo
+- **Nginx** como reverse proxy + **Let's Encrypt SSL**
+- **MongoDB Atlas** (cloud) como banco de dados
+- **Domínio:** [api.bokka.com.br](https://api.bokka.com.br)
+- CORS restrito aos domínios de produção
+- Sem CI/CD automatizado; deploy manual via SFTP + restart systemd
 
 ## Autor
 
