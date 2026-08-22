@@ -15,3 +15,14 @@ odonto-clinic-web/
 .claude/
 boot.log
 query
+
+# Maestri / OmniRoute (config de orquestracao — local apenas)
+.maestri/
+omni-route.log
+
+# Docker
+mongo-data/
+
+# Backend logs
+demo/backend-err.log
+demo/backend-out.log
