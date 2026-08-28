@@ -18,7 +18,7 @@ API REST multi-tenant para gestão completa de clínicas odontológicas. Cobre d
 ## Tecnologias
 
 - **Java 17** com **Spring Boot 4.0.6**
-- **Spring Security 6** + **JWT** (Auth0 java-jwt, HMAC256, BCrypt) — autenticação stateless
+- **Spring Security 7** + **JWT** (Auth0 java-jwt, HMAC256, BCrypt) — autenticação stateless
 - **Spring Data MongoDB** — persistência NoSQL
 - **MongoDB Atlas** (cloud) — banco de dados em produção
 - **Bean Validation** — validação de entrada
@@ -62,14 +62,24 @@ Isolamento de dados por `clinicaId` com índice composto. Cada clínica é um te
 ```bash
 # 1. Clone o repositório
 git clone https://github.com/wilsonborgesbr/odonto-clinic-api.git
-cd odonto-clinic-api/demo
+cd odonto-clinic-api
 
-# 2. Configure a connection string do MongoDB em:
-#    src/main/resources/application.properties
+# 2. Suba o MongoDB local via Docker
+#    O volume é externo (docker-compose.yml usa external: true), então numa
+#    máquina nova ele precisa ser criado manualmente ANTES do primeiro `docker compose up`:
+docker volume create bokka-mongo-data
+docker compose up -d
 
-# 3. Execute
-./mvnw spring-boot:run
+# 3. Execute em modo de desenvolvimento (profile "local")
+#    Linux/Mac:
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+#    Windows (PowerShell):
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+⚠️ **Sem `-Dspring-boot.run.profiles=local`**, a aplicação sobe no profile *default*, que aponta para o banco `odonto_clinic` (configuração de produção/Atlas, não é o que se quer localmente). O profile `local` usa `src/main/resources/application-local.properties`, que aponta para `mongodb://localhost:27017/sistema_clinica` — o banco correto para desenvolvimento.
+
+Se quiser popular usuários de demonstração num banco novo, adicione `-Dbokka.seed.dev-users=true` ao comando acima.
 
 A API sobe na porta **8080** por padrão. Todos os endpoints (exceto `/auth/*`) exigem token JWT no header `Authorization: Bearer <token>`.
 
@@ -226,7 +236,7 @@ Disponível em produção:
 ## Estrutura de pastas
 
 ```
-demo/src/main/java/com/example/demo/
+src/main/java/com/example/demo/
 ├── config/             # SecurityConfig, SecurityFilter (JWT), CORS
 ├── controller/         # 14 REST controllers
 ├── dto/                # Data Transfer Objects (auth, requests, responses)

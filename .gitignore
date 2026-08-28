@@ -24,5 +24,9 @@ omni-route.log
 mongo-data/
 
 # Backend logs
-demo/backend-err.log
-demo/backend-out.log
+backend-*.log
+npm-run-dev.log
+
+# Backend (Maven / Spring Boot)
+HELP.md
+.mvn/wrapper/maven-wrapper.jar
