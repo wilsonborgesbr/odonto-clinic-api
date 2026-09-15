@@ -1,10 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AtualizarPreferenciasDTO;
 import com.example.demo.dto.AtualizarUsuarioDTO;
 import com.example.demo.dto.CriarUsuarioDTO;
 import com.example.demo.dto.UsuarioDTO;
 import com.example.demo.enums.RoleEnum;
 import com.example.demo.model.User;
+import com.example.demo.model.UserPreferences;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,6 +56,27 @@ public class UsuarioController {
         // Endpoint aberto a qualquer usuário logado — usado pelo frontend
         // para reconciliar suas permissões após ações que alterem o próprio user.
         return ResponseEntity.ok(UsuarioDTO.from(AuthContextHelper.currentUser()));
+    }
+
+    @PatchMapping("/me/preferences")
+    public ResponseEntity<UsuarioDTO> atualizarPreferencias(@RequestBody @Valid AtualizarPreferenciasDTO dto) {
+        String userId = AuthContextHelper.currentUserId();
+        String clinicaId = AuthContextHelper.currentClinicaId();
+
+        User user = userRepository.findById(userId)
+                .filter(u -> clinicaId.equals(u.getClinicaId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+
+        if (!Boolean.TRUE.equals(user.getAtivo())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário inativo.");
+        }
+
+        UserPreferences prefs = user.getPreferences() != null ? user.getPreferences() : new UserPreferences();
+        prefs.setHideFinancialInfo(dto.getHideFinancialInfo());
+        user.setPreferences(prefs);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return ResponseEntity.ok(UsuarioDTO.from(userRepository.save(user)));
     }
 
     @PostMapping

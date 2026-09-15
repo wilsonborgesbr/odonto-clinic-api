@@ -74,6 +74,9 @@ public class User implements UserDetails {
 
     private LocalDateTime updatedAt;
 
+    /** Preferências pessoais do usuário (ex.: ocultar informações financeiras). */
+    private UserPreferences preferences;
+
     // ============ Spring Security UserDetails ============
 
     /**
