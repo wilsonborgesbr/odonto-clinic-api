@@ -3,7 +3,6 @@ package com.example.demo.dto;
 import com.example.demo.enums.PermissaoEnum;
 import com.example.demo.enums.RoleEnum;
 import com.example.demo.model.User;
-import com.example.demo.model.UserPreferences;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +22,6 @@ public class UsuarioDTO {
     private Set<PermissaoEnum> permissoes;
     private Boolean ativo;
     private LocalDateTime createdAt;
-    private UserPreferences preferences;
 
     public static UsuarioDTO from(User user) {
         UsuarioDTO dto = new UsuarioDTO();
@@ -34,9 +32,6 @@ public class UsuarioDTO {
         dto.setPermissoes(user.permissoesEfetivas());
         dto.setAtivo(user.getAtivo());
         dto.setCreatedAt(user.getCreatedAt());
-        dto.setPreferences(user.getPreferences() != null
-                ? user.getPreferences()
-                : UserPreferences.builder().build());
         return dto;
     }
 }
