@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Paciente;
 import com.example.demo.dto.PacienteListagemDTO;
+import com.example.demo.dto.PacienteResumoDTO;
 import com.example.demo.service.PacienteService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,9 +35,16 @@ public class PacienteController {
     @GetMapping
     public ResponseEntity<Page<PacienteListagemDTO>> listarTodos(
             @PageableDefault(size = 10, sort = "nomeCompleto") Pageable pageable,
-            @RequestParam(required = false) String nome) {
-        Page<PacienteListagemDTO> pacientes = pacienteService.buscarPorNome(nome, pageable);
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde) {
+        Page<PacienteListagemDTO> pacientes = pacienteService.listar(nome, desde, pageable);
         return ResponseEntity.ok(pacientes);
+    }
+
+    @GetMapping("/resumo")
+    public ResponseEntity<List<PacienteResumoDTO>> resumo(
+            @RequestParam(required = false) List<String> ids) {
+        return ResponseEntity.ok(pacienteService.buscarResumos(ids));
     }
 
     @GetMapping("/{id}")
