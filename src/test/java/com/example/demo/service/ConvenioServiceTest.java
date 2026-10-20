@@ -37,7 +37,7 @@ class ConvenioServiceTest {
                 .id("conv-123")
                 .clinicaId(TEST_CLINICA_ID)
                 .nome("Bradesco Dental")
-                .cnpj("12.345.678/0001-90")
+                .cnpj("11.222.333/0001-81")
                 .telefone("(11) 4004-0019")
                 .email("contato@bradescodental.com.br")
                 .tabelaDePrecos("Tabela A")
@@ -96,7 +96,7 @@ class ConvenioServiceTest {
     void atualizar_ComSucesso_DeveAtualizarCamposETimestamp() {
         Convenio dadosAtualizados = Convenio.builder()
                 .nome("Bradesco Dental Premium")
-                .cnpj("12.345.678/0001-90") // mesmo CNPJ
+                .cnpj("11.222.333/0001-81") // mesmo CNPJ
                 .telefone("(11) 99999-9999")
                 .email("premium@bradescodental.com.br")
                 .tabelaDePrecos("Tabela Premium")
@@ -120,17 +120,17 @@ class ConvenioServiceTest {
     void atualizar_CnpjExistenteEmOutroConvenio_DeveLancarExcecao() {
         Convenio dadosAtualizados = Convenio.builder()
                 .nome("Bradesco Dental Premium")
-                .cnpj("99.999.999/9999-99") // novo CNPJ
+                .cnpj("11.444.777/0001-61") // novo CNPJ
                 .build();
 
         Convenio outroConvenio = Convenio.builder()
                 .id("conv-999")
-                .cnpj("99.999.999/9999-99")
+                .cnpj("11.444.777/0001-61")
                 .build();
 
         when(convenioRepository.findByIdAndClinicaId("conv-123", TEST_CLINICA_ID))
                 .thenReturn(Optional.of(convenio));
-        when(convenioRepository.findByCnpjAndClinicaId("99.999.999/9999-99", TEST_CLINICA_ID))
+        when(convenioRepository.findByCnpjAndClinicaId("11.444.777/0001-61", TEST_CLINICA_ID))
                 .thenReturn(Optional.of(outroConvenio));
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,

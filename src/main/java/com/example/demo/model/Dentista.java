@@ -5,12 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.Valid;
 import com.example.demo.enums.SexoEnum;
 
@@ -21,6 +22,20 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "dentistas")
+@CompoundIndexes({
+        @CompoundIndex(
+                name = "clinica_cro_unique",
+                def = "{'clinicaId': 1, 'cro': 1}",
+                unique = true,
+                partialFilter = "{'cro': {$type: 'string', $gt: ''}}"
+        ),
+        @CompoundIndex(
+                name = "clinica_cpf_unique",
+                def = "{'clinicaId': 1, 'cpf': 1}",
+                unique = true,
+                partialFilter = "{'cpf': {$type: 'string', $gt: ''}}"
+        )
+})
 public class Dentista {
 
     @Id
@@ -33,12 +48,9 @@ public class Dentista {
     private String nomeCompleto;
 
     @NotBlank(message = "CRO é obrigatório")
-    @Pattern(
-            regexp = "CRO-[A-Z]{2} \\d{4,6}(\\/\\d{4})?",
-            message = "CRO deve seguir o formato: CRO-SE 12345 ou CRO-SE 12345/2022"
-    )
-    @Indexed(unique = true)
     private String cro;
+
+    private String cpf;
 
     private List<EspecialidadeEnum> especialidades;
 

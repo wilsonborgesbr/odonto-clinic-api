@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +18,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     /** Verifica duplicidade dentro de uma clínica. */
     boolean existsByEmailAndClinicaId(String email, String clinicaId);
+
+    /** Busca tolerante a legado: e-mail igual ignorando caixa (regex ancorado e escapado). */
+    @Query("{ 'clinicaId': ?0, 'email': { $regex: ?1, $options: 'i' } }")
+    List<User> findByClinicaIdAndEmailRegexIgnoreCase(String clinicaId, String regex);
 
     /** Lista todos os usuários de uma clínica (para tela de gestão). */
     List<User> findByClinicaId(String clinicaId);

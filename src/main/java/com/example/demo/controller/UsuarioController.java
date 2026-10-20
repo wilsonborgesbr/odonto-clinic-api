@@ -9,6 +9,8 @@ import com.example.demo.model.User;
 import com.example.demo.model.UserPreferences;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.service.UserLookupService;
+import com.example.demo.util.FormatadorTexto;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class UsuarioController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserLookupService userLookupService;
 
     private void requireGestaoUsuarios() {
         var atual = AuthContextHelper.currentUser();
@@ -84,7 +89,8 @@ public class UsuarioController {
         requireGestaoUsuarios();
         String clinicaId = AuthContextHelper.currentClinicaId();
 
-        if (userRepository.existsByEmailAndClinicaId(dto.getEmail(), clinicaId)) {
+        String email = FormatadorTexto.email(dto.getEmail());
+        if (userLookupService.emailEmUso(email, clinicaId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado nesta clínica.");
         }
         if (dto.getRole() == RoleEnum.PROPRIETARIO) {
@@ -95,7 +101,7 @@ public class UsuarioController {
         String encoded = new BCryptPasswordEncoder().encode(dto.getPassword());
         User novo = User.builder()
                 .name(dto.getName())
-                .email(dto.getEmail())
+                .email(email)
                 .password(encoded)
                 .clinicaId(clinicaId)
                 .role(dto.getRole())
@@ -132,13 +138,13 @@ public class UsuarioController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Só existe um proprietário por clínica.");
         }
 
-        if (!user.getEmail().equalsIgnoreCase(dto.getEmail())
-                && userRepository.existsByEmailAndClinicaId(dto.getEmail(), clinicaId)) {
+        String email = FormatadorTexto.email(dto.getEmail());
+        if (!user.getEmail().equalsIgnoreCase(email) && userLookupService.emailEmUso(email, clinicaId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado nesta clínica.");
         }
 
         user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
+        user.setEmail(email);
         user.setRole(dto.getRole());
         user.setPermissoes(dto.getPermissoes());
         if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {

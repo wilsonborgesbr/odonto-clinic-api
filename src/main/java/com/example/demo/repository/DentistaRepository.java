@@ -12,6 +12,8 @@ public interface DentistaRepository extends MongoRepository<Dentista, String> {
 
     Optional<Dentista> findByCroAndClinicaId(String cro, String clinicaId);
 
+    Optional<Dentista> findByCpfAndClinicaId(String cpf, String clinicaId);
+
     List<Dentista> findByClinicaIdAndAtivoTrue(String clinicaId);
 
     Page<Dentista> findByClinicaIdAndAtivoTrue(String clinicaId, Pageable pageable);

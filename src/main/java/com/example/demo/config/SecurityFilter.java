@@ -1,6 +1,6 @@
 package com.example.demo.config;
 
-import com.example.demo.repository.UserRepository;
+import com.example.demo.service.UserLookupService;
 import com.example.demo.service.TokenService;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -23,7 +23,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     private TokenService tokenService;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserLookupService userLookupService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -37,7 +37,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 String clinicaId = decoded.getClaim("clinicaId").asString();
 
                 if (email != null && clinicaId != null) {
-                    userRepository.findByEmailAndClinicaId(email, clinicaId).ifPresent(user -> {
+                    userLookupService.buscarPorEmail(email, clinicaId).ifPresent(user -> {
                         var auth = new UsernamePasswordAuthenticationToken(
                                 user, null, user.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(auth);

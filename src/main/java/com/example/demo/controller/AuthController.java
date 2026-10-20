@@ -10,6 +10,8 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ClinicaRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FormatadorTexto;
+import com.example.demo.service.UserLookupService;
 import com.example.demo.service.TokenService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ public class AuthController {
     private ClinicaRepository clinicaRepository;
 
     @Autowired
+    private UserLookupService userLookupService;
+
+    @Autowired
     private TokenService tokenService;
 
     /**
@@ -46,7 +51,7 @@ public class AuthController {
                 .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Clínica não encontrada."));
 
-        User user = userRepository.findByEmailAndClinicaId(data.getEmail(), clinica.getId())
+        User user = userLookupService.buscarPorEmail(data.getEmail(), clinica.getId())
                 .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas."));
 
@@ -82,12 +87,13 @@ public class AuthController {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+        FormatadorTexto.normalizar(clinica);
         Clinica salva = clinicaRepository.save(clinica);
 
         String encrypted = new BCryptPasswordEncoder().encode(data.getAdminPassword());
         User proprietario = User.builder()
                 .name(data.getAdminNome())
-                .email(data.getAdminEmail())
+                .email(FormatadorTexto.email(data.getAdminEmail()))
                 .password(encrypted)
                 .clinicaId(salva.getId())
                 .role(RoleEnum.PROPRIETARIO)
@@ -111,11 +117,10 @@ public class AuthController {
 
         currentUser.setName(data.getName());
 
-        String novoEmail = data.getEmail();
-        if (novoEmail != null && !novoEmail.isBlank()
-                && !novoEmail.equalsIgnoreCase(currentUser.getEmail())) {
-            boolean exists = userRepository.existsByEmailAndClinicaId(novoEmail, currentUser.getClinicaId());
-            if (exists) {
+        String novoEmail = FormatadorTexto.email(data.getEmail());
+        if (novoEmail != null && !novoEmail.equals(currentUser.getEmail())) {
+            if (!novoEmail.equalsIgnoreCase(currentUser.getEmail())
+                    && userLookupService.emailEmUso(novoEmail, currentUser.getClinicaId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado nesta clínica.");
             }
             currentUser.setEmail(novoEmail);

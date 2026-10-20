@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -17,6 +18,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "convenios")
+@CompoundIndex(
+        name = "clinica_cnpj_unique",
+        def = "{'clinicaId': 1, 'cnpj': 1}",
+        unique = true,
+        partialFilter = "{'cnpj': {$type: 'string', $gt: ''}}"
+)
 public class Convenio {
 
     @Id
@@ -27,7 +34,6 @@ public class Convenio {
 
     private String nome;
 
-    @Indexed(unique = true)
     private String cnpj;
 
     private String registroANS;

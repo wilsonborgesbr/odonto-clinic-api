@@ -4,7 +4,9 @@ import com.example.demo.dto.FuncionarioListagemDTO;
 import com.example.demo.model.Funcionario;
 import com.example.demo.repository.FuncionarioRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FormatadorTexto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,9 +22,10 @@ public class FuncionarioService {
     private FuncionarioRepository funcionarioRepository;
 
     public Funcionario criar(Funcionario funcionario) {
+        FormatadorTexto.normalizar(funcionario);
         String clinicaId = AuthContextHelper.currentClinicaId();
-        if (funcionarioRepository.findByCpfAndClinicaId(funcionario.getCpf(), clinicaId).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
+        if (cpfEmUso(funcionario.getCpf(), null, clinicaId)) {
+            throw cpfDuplicado();
         }
 
         funcionario.setClinicaId(clinicaId);
@@ -30,7 +33,24 @@ public class FuncionarioService {
         funcionario.setCreatedAt(LocalDateTime.now());
         funcionario.setUpdatedAt(LocalDateTime.now());
 
-        return funcionarioRepository.save(funcionario);
+        return salvar(funcionario);
+    }
+
+    private boolean cpfEmUso(String cpf, String cpfAtual, String clinicaId) {
+        return cpf != null && !cpf.isBlank() && !cpf.equals(cpfAtual)
+                && funcionarioRepository.findByCpfAndClinicaId(cpf, clinicaId).isPresent();
+    }
+
+    private ResponseStatusException cpfDuplicado() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
+    }
+
+    private Funcionario salvar(Funcionario funcionario) {
+        try {
+            return funcionarioRepository.save(funcionario);
+        } catch (DuplicateKeyException e) {
+            throw cpfDuplicado();
+        }
     }
 
     public Page<FuncionarioListagemDTO> listarTodos(Pageable pageable) {
@@ -47,14 +67,14 @@ public class FuncionarioService {
     }
 
     public Funcionario atualizar(String id, Funcionario dadosAtualizados) {
+        FormatadorTexto.normalizar(dadosAtualizados);
         String clinicaId = AuthContextHelper.currentClinicaId();
         Funcionario existente = funcionarioRepository.findByIdAndClinicaId(id, clinicaId)
                 .filter(Funcionario::getAtivo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado."));
 
-        if (!existente.getCpf().equals(dadosAtualizados.getCpf())
-                && funcionarioRepository.findByCpfAndClinicaId(dadosAtualizados.getCpf(), clinicaId).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF já cadastrado nesta clínica.");
+        if (cpfEmUso(dadosAtualizados.getCpf(), existente.getCpf(), clinicaId)) {
+            throw cpfDuplicado();
         }
 
         existente.setNomeCompleto(dadosAtualizados.getNomeCompleto());
@@ -66,7 +86,7 @@ public class FuncionarioService {
         existente.setEndereco(dadosAtualizados.getEndereco());
         existente.setUpdatedAt(LocalDateTime.now());
 
-        return funcionarioRepository.save(existente);
+        return salvar(existente);
     }
 
     public void deletar(String id) {
