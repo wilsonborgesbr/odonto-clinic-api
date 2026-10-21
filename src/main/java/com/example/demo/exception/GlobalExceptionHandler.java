@@ -34,6 +34,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
+    @ExceptionHandler(CampoInvalidoException.class)
+    public ResponseEntity<ErroPadrao> handleCampoInvalido(CampoInvalidoException ex, HttpServletRequest request) {
+        ErroPadrao erro = new ErroPadrao(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Erro de Validação",
+                Map.of(ex.getCampo(), ex.getReason()),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErroPadrao> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
         String nomeErro = "Erro na Requisição";

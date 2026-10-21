@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import com.example.demo.validation.DataNaoFutura;
 import jakarta.validation.Valid;
 import com.example.demo.enums.SexoEnum;
 
@@ -21,6 +23,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "pacientes")
+@CompoundIndex(
+        name = "clinica_cpf_unique",
+        def = "{'clinicaId': 1, 'cpf': 1}",
+        unique = true,
+        partialFilter = "{'cpf': {$gt: ''}}"
+)
 public class Paciente {
 
     @Id
@@ -34,13 +42,15 @@ public class Paciente {
     private String nomeCompleto;
 
     @NotBlank(message = "CPF é obrigatório")
-    @Indexed(unique = true)
     private String cpf;
 
     private String rg;
 
-    @NotNull(message = "Data de nascimento é obrigatória")
+    @DataNaoFutura(message = "Data de nascimento não pode ser futura")
     private LocalDate dataNascimento;
+
+    private String responsavelNome;
+    private String responsavelCpf;
 
     @NotNull(message = "Sexo é obrigatório")
     private SexoEnum sexo;
