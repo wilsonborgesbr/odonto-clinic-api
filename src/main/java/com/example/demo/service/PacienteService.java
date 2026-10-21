@@ -6,6 +6,7 @@ import com.example.demo.model.Endereco;
 import com.example.demo.model.Paciente;
 import com.example.demo.repository.PacienteRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.ColacaoPtBr;
 import com.example.demo.util.FormatadorTexto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -82,7 +83,7 @@ public class PacienteService {
             criteria.orOperator(criteriosDeBusca(termo.trim()));
         }
 
-        Query query = new Query(criteria).with(pageable);
+        Query query = new Query(criteria).with(pageable).collation(ColacaoPtBr.COLLATION);
         query.fields().include("nomeCompleto", "cpf", "email", "telefoneCelular", "ativo", "createdAt", "fotoUrl",
                 "responsavelNome", "dataNascimento");
 

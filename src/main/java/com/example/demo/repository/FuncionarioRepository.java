@@ -1,6 +1,8 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.Funcionario;
+import com.example.demo.util.ColacaoPtBr;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +16,7 @@ public interface FuncionarioRepository extends MongoRepository<Funcionario, Stri
 
     List<Funcionario> findByClinicaIdAndAtivoTrue(String clinicaId);
 
+    @Query(value = "{ 'clinicaId': ?0, 'ativo': true }", collation = ColacaoPtBr.JSON)
     Page<Funcionario> findByClinicaIdAndAtivoTrue(String clinicaId, Pageable pageable);
 
     Optional<Funcionario> findByIdAndClinicaId(String id, String clinicaId);

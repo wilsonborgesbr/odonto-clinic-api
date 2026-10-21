@@ -215,6 +215,29 @@ class PacienteServiceTest {
     }
 
     @Test
+    void listar_OrdenaPorNomeComColacaoPtIgnorandoAcentoECaixa() {
+        pacienteService.listar(null, null, PageRequest.of(0, 10, Sort.by("nomeCompleto")));
+
+        Query query = capturarQuery();
+        assertEquals(1, query.getSortObject().get("nomeCompleto"));
+        Document colacao = query.getCollation().orElseThrow().toDocument();
+        assertEquals("pt", colacao.getString("locale"));
+        assertEquals(1, colacao.getInteger("strength"));
+    }
+
+    @Test
+    void listar_ColacaoNaoAlteraOFiltroDeBuscaNemDeClinica() {
+        pacienteService.listar("jose", null, PageRequest.of(0, 10, Sort.by("nomeCompleto")));
+
+        Query query = capturarQuery();
+        assertTrue(query.getCollation().isPresent());
+        assertEquals(TEST_CLINICA_ID, query.getQueryObject().get("clinicaId"));
+        assertEquals(true, query.getQueryObject().get("ativo"));
+        assertEquals(2, ((List<?>) query.getQueryObject().get("$or")).size());
+        assertTrue(casa(padroes("jose", "nomeCompleto"), "José"));
+    }
+
+    @Test
     void listar_DesdeFiltraPorDataDeCadastroAPartirDoInicioDoDia() {
         pacienteService.listar(null, LocalDate.of(2026, 10, 6), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
 
