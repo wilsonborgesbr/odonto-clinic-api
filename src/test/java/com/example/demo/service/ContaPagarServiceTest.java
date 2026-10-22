@@ -77,7 +77,7 @@ class ContaPagarServiceTest {
         ContaPagar resultado = contaPagarService.criar(contaPagarPendente);
 
         assertEquals(StatusFinanceiroEnum.PAGO, resultado.getStatus());
-        assertEquals(LocalDate.now(), resultado.getDataPagamento());
+        assertEquals(com.example.demo.util.FusoBrasil.hoje(), resultado.getDataPagamento());
     }
 
     @Test
@@ -111,6 +111,6 @@ class ContaPagarServiceTest {
         assertEquals("Novo Nome", resultado.getDescricao());
         assertEquals(CategoriaContaPagarEnum.LUZ, resultado.getCategoria());
         assertEquals(StatusFinanceiroEnum.PAGO, resultado.getStatus());
-        assertEquals(LocalDate.now(), resultado.getDataPagamento());
+        assertEquals(com.example.demo.util.FusoBrasil.hoje(), resultado.getDataPagamento());
     }
 }

@@ -31,8 +31,10 @@ public class AgendamentoController {
 
     @GetMapping
     public ResponseEntity<Page<Agendamento>> listarTodos(
-            @PageableDefault(size = 20, sort = "dataHoraInicio") Pageable pageable) {
-        Page<Agendamento> agendamentos = agendamentoService.listarTodos(pageable);
+            @PageableDefault(size = 20, sort = {"dataHoraInicio", "id"}) Pageable pageable,
+            @RequestParam(value = "de", required = false) String de,
+            @RequestParam(value = "ate", required = false) String ate) {
+        Page<Agendamento> agendamentos = agendamentoService.listarTodos(pageable, de, ate);
         return ResponseEntity.ok(agendamentos);
     }
 

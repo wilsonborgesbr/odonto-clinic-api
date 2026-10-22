@@ -4,12 +4,13 @@ import com.example.demo.model.Anamnese;
 import com.example.demo.repository.AnamneseRepository;
 import com.example.demo.repository.PacienteRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FusoBrasil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class AnamneseService {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    private Clock relogio = Clock.systemUTC();
 
     public Anamnese criar(Anamnese anamnese) {
         String clinicaId = AuthContextHelper.currentClinicaId();
@@ -34,7 +37,7 @@ public class AnamneseService {
         }
 
         anamnese.setClinicaId(clinicaId);
-        anamnese.setDataPreenchimento(LocalDate.now());
+        anamnese.setDataPreenchimento(FusoBrasil.hoje(relogio));
         anamnese.setCreatedAt(LocalDateTime.now());
 
         return anamneseRepository.save(anamnese);

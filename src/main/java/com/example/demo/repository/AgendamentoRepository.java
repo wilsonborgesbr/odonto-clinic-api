@@ -16,6 +16,21 @@ public interface AgendamentoRepository extends MongoRepository<Agendamento, Stri
     org.springframework.data.domain.Page<Agendamento> findByClinicaId(
             String clinicaId, org.springframework.data.domain.Pageable pageable);
 
+    @Query("{ 'clinicaId': ?0, 'dataHoraInicio': { $gte: ?1, $lt: ?2 } }")
+    org.springframework.data.domain.Page<Agendamento> findPorPeriodo(
+            String clinicaId, LocalDateTime inicioInclusivo, LocalDateTime fimExclusivo,
+            org.springframework.data.domain.Pageable pageable);
+
+    @Query("{ 'clinicaId': ?0, 'dataHoraInicio': { $gte: ?1 } }")
+    org.springframework.data.domain.Page<Agendamento> findAPartirDe(
+            String clinicaId, LocalDateTime inicioInclusivo,
+            org.springframework.data.domain.Pageable pageable);
+
+    @Query("{ 'clinicaId': ?0, 'dataHoraInicio': { $lt: ?1 } }")
+    org.springframework.data.domain.Page<Agendamento> findAte(
+            String clinicaId, LocalDateTime fimExclusivo,
+            org.springframework.data.domain.Pageable pageable);
+
     List<Agendamento> findByClinicaIdAndPacienteId(String clinicaId, String pacienteId);
 
     List<Agendamento> findByClinicaIdAndDentistaId(String clinicaId, String dentistaId);

@@ -4,12 +4,13 @@ import com.example.demo.model.Odontograma;
 import com.example.demo.repository.OdontogramaRepository;
 import com.example.demo.repository.PacienteRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FusoBrasil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class OdontogramaService {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    private Clock relogio = Clock.systemUTC();
 
     public Odontograma criar(Odontograma odontograma) {
         String clinicaId = AuthContextHelper.currentClinicaId();
@@ -34,7 +37,7 @@ public class OdontogramaService {
         }
 
         odontograma.setClinicaId(clinicaId);
-        odontograma.setDataAvaliacao(LocalDate.now());
+        odontograma.setDataAvaliacao(FusoBrasil.hoje(relogio));
         odontograma.setCreatedAt(LocalDateTime.now());
 
         return odontogramaRepository.save(odontograma);

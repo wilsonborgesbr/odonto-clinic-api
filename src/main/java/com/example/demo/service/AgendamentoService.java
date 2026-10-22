@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.enums.StatusAgendamentoEnum;
 import com.example.demo.enums.StatusProcedimentoEnum;
 import com.example.demo.enums.TipoAgendamentoEnum;
+import com.example.demo.exception.CampoInvalidoException;
 import com.example.demo.model.Agendamento;
 import com.example.demo.model.Procedimento;
 import com.example.demo.repository.AgendamentoRepository;
@@ -16,11 +17,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class AgendamentoService {
+
+    private static final Pattern DIA_ISO = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
 
     @Autowired
     private AgendamentoRepository agendamentoRepository;
@@ -92,7 +98,48 @@ public class AgendamentoService {
     }
 
     public Page<Agendamento> listarTodos(Pageable pageable) {
-        return agendamentoRepository.findByClinicaId(AuthContextHelper.currentClinicaId(), pageable);
+        return listarTodos(pageable, null, null);
+    }
+
+    /**
+     * {@code de} e {@code ate} são dias (AAAA-MM-DD) do calendário da clínica, ambos inclusivos. Os horários dos
+     * agendamentos são horário de parede de São Paulo (LocalDateTime), então o dia vai de 00:00 até 24:00 sem
+     * conversão de fuso. Qualquer um dos dois pode faltar.
+     */
+    public Page<Agendamento> listarTodos(Pageable pageable, String de, String ate) {
+        String clinicaId = AuthContextHelper.currentClinicaId();
+        LocalDate inicio = lerDia("de", "Data inicial inválida. Use o formato AAAA-MM-DD.", de);
+        LocalDate fim = lerDia("ate", "Data final inválida. Use o formato AAAA-MM-DD.", ate);
+
+        if (inicio != null && fim != null && fim.isBefore(inicio)) {
+            throw new CampoInvalidoException("ate", "A data final não pode ser anterior à data inicial.");
+        }
+        if (inicio == null && fim == null) {
+            return agendamentoRepository.findByClinicaId(clinicaId, pageable);
+        }
+        if (fim == null) {
+            return agendamentoRepository.findAPartirDe(clinicaId, inicio.atStartOfDay(), pageable);
+        }
+        LocalDateTime fimExclusivo = fim.plusDays(1).atStartOfDay();
+        if (inicio == null) {
+            return agendamentoRepository.findAte(clinicaId, fimExclusivo, pageable);
+        }
+        return agendamentoRepository.findPorPeriodo(clinicaId, inicio.atStartOfDay(), fimExclusivo, pageable);
+    }
+
+    private static LocalDate lerDia(String campo, String mensagem, String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        String texto = valor.trim();
+        if (!DIA_ISO.matcher(texto).matches()) {
+            throw new CampoInvalidoException(campo, mensagem);
+        }
+        try {
+            return LocalDate.parse(texto);
+        } catch (DateTimeParseException e) {
+            throw new CampoInvalidoException(campo, mensagem);
+        }
     }
 
     public List<Agendamento> listarPorPaciente(String pacienteId) {

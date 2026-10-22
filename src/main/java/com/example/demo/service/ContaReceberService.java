@@ -7,11 +7,13 @@ import com.example.demo.model.Paciente;
 import com.example.demo.repository.ContaReceberRepository;
 import com.example.demo.repository.PacienteRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FusoBrasil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +26,8 @@ public class ContaReceberService {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    private Clock relogio = Clock.systemUTC();
 
     public ContaReceber criar(ContaReceber conta) {
         String clinicaId = AuthContextHelper.currentClinicaId();
@@ -117,7 +121,7 @@ public class ContaReceberService {
         conta.setUpdatedAt(LocalDateTime.now());
         if (novoValorPago >= conta.getValorTotal()) {
             conta.setStatus(StatusFinanceiroEnum.PAGO);
-            conta.setDataPagamento(LocalDate.now());
+            conta.setDataPagamento(FusoBrasil.hoje(relogio));
         }
         return contaReceberRepository.save(conta);
     }
@@ -146,7 +150,7 @@ public class ContaReceberService {
         if (dadosAtualizados.getStatus() != null) {
             if (dadosAtualizados.getStatus() == StatusFinanceiroEnum.PAGO
                     && contaExistente.getStatus() != StatusFinanceiroEnum.PAGO) {
-                contaExistente.setDataPagamento(LocalDate.now());
+                contaExistente.setDataPagamento(FusoBrasil.hoje(relogio));
                 if (contaExistente.getValorPago() < contaExistente.getValorTotal()) {
                     contaExistente.setValorPago(contaExistente.getValorTotal());
                 }

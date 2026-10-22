@@ -5,11 +5,13 @@ import com.example.demo.enums.TipoPagamentoProcedimentoEnum;
 import com.example.demo.model.ContaPagar;
 import com.example.demo.repository.ContaPagarRepository;
 import com.example.demo.security.AuthContextHelper;
+import com.example.demo.util.FusoBrasil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +21,8 @@ public class ContaPagarService {
 
     @Autowired
     private ContaPagarRepository contaPagarRepository;
+
+    private Clock relogio = Clock.systemUTC();
 
     public ContaPagar criar(ContaPagar conta) {
         String clinicaId = AuthContextHelper.currentClinicaId();
@@ -32,7 +36,7 @@ public class ContaPagarService {
 
         // Se o status for PAGO e data de pagamento não informada, assume a data atual
         if (conta.getStatus() == StatusFinanceiroEnum.PAGO && conta.getDataPagamento() == null) {
-            conta.setDataPagamento(LocalDate.now());
+            conta.setDataPagamento(FusoBrasil.hoje(relogio));
         }
 
         // Auto-split PARCELADO: gera N contas com vencimentos mensais
@@ -102,7 +106,7 @@ public class ContaPagarService {
         if (dadosAtualizados.getStatus() != null) {
             if (dadosAtualizados.getStatus() == StatusFinanceiroEnum.PAGO && contaExistente.getStatus() != StatusFinanceiroEnum.PAGO) {
                 // Ao quitar, se não foi fornecida data de pagamento, define como hoje
-                contaExistente.setDataPagamento(dadosAtualizados.getDataPagamento() != null ? dadosAtualizados.getDataPagamento() : LocalDate.now());
+                contaExistente.setDataPagamento(dadosAtualizados.getDataPagamento() != null ? dadosAtualizados.getDataPagamento() : FusoBrasil.hoje(relogio));
             } else if (dadosAtualizados.getStatus() != StatusFinanceiroEnum.PAGO) {
                 contaExistente.setDataPagamento(null);
             } else {

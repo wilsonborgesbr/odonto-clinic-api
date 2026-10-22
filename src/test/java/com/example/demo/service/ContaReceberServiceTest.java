@@ -6,6 +6,7 @@ import com.example.demo.model.ContaReceber;
 import com.example.demo.model.Paciente;
 import com.example.demo.repository.ContaReceberRepository;
 import com.example.demo.repository.PacienteRepository;
+import com.example.demo.util.FusoBrasil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,9 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static com.example.demo.service.TenantTestSupport.TEST_CLINICA_ID;
@@ -140,7 +145,71 @@ class ContaReceberServiceTest {
 
         assertEquals(500.0, resultado.getValorPago());
         assertEquals(StatusFinanceiroEnum.PAGO, resultado.getStatus());
-        assertEquals(LocalDate.now(), resultado.getDataPagamento());
+        assertEquals(FusoBrasil.hoje(), resultado.getDataPagamento());
         verify(contaReceberRepository, times(1)).save(any(ContaReceber.class));
+    }
+
+    // 01:30 UTC de 24/10 ainda é 22:30 de 23/10 em São Paulo: a JVM da VPS (UTC) não pode empurrar o pagamento para o dia seguinte.
+    private static final Clock NOITE_EM_SP_JA_DIA_SEGUINTE_EM_UTC =
+            Clock.fixed(Instant.parse("2026-10-24T01:30:00Z"), ZoneOffset.UTC);
+
+    @Test
+    void registrarPagamento_Total_DataPagamentoEODiaDeSaoPauloEMesmoComJvmJaNoDiaSeguinte() {
+        ReflectionTestUtils.setField(contaReceberService, "relogio", NOITE_EM_SP_JA_DIA_SEGUINTE_EM_UTC);
+        when(contaReceberRepository.findByIdAndClinicaId("conta-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(contaPendente));
+        when(contaReceberRepository.save(any(ContaReceber.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ContaReceber resultado = contaReceberService.registrarPagamento("conta-123", 500.0);
+
+        assertEquals(LocalDate.of(2026, 10, 23), resultado.getDataPagamento());
+    }
+
+    @Test
+    void registrarPagamento_UltimoDiaDoMesAs22h_NaoCaiNoMesSeguinte() {
+        ReflectionTestUtils.setField(contaReceberService, "relogio",
+                Clock.fixed(Instant.parse("2026-11-01T01:00:00Z"), ZoneOffset.UTC));
+        when(contaReceberRepository.findByIdAndClinicaId("conta-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(contaPendente));
+        when(contaReceberRepository.save(any(ContaReceber.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ContaReceber resultado = contaReceberService.registrarPagamento("conta-123", 500.0);
+
+        assertEquals(LocalDate.of(2026, 10, 31), resultado.getDataPagamento());
+    }
+
+    @Test
+    void atualizar_MarcandoComoPago_DataPagamentoEODiaDeSaoPaulo() {
+        ReflectionTestUtils.setField(contaReceberService, "relogio", NOITE_EM_SP_JA_DIA_SEGUINTE_EM_UTC);
+        when(contaReceberRepository.findByIdAndClinicaId("conta-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(contaPendente));
+        when(contaReceberRepository.save(any(ContaReceber.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ContaReceber dados = ContaReceber.builder()
+                .descricao("Consulta de Canal")
+                .valorTotal(500.0)
+                .formaPagamento(FormaPagamentoEnum.PIX)
+                .dataVencimento(contaPendente.getDataVencimento())
+                .status(StatusFinanceiroEnum.PAGO)
+                .build();
+
+        ContaReceber resultado = contaReceberService.atualizar("conta-123", dados);
+
+        assertEquals(StatusFinanceiroEnum.PAGO, resultado.getStatus());
+        assertEquals(LocalDate.of(2026, 10, 23), resultado.getDataPagamento());
+        assertEquals(500.0, resultado.getValorPago());
+    }
+
+    @Test
+    void registrarPagamento_Parcial_NaoDefineDataPagamento() {
+        ReflectionTestUtils.setField(contaReceberService, "relogio", NOITE_EM_SP_JA_DIA_SEGUINTE_EM_UTC);
+        when(contaReceberRepository.findByIdAndClinicaId("conta-123", TEST_CLINICA_ID))
+                .thenReturn(Optional.of(contaPendente));
+        when(contaReceberRepository.save(any(ContaReceber.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertNull(contaReceberService.registrarPagamento("conta-123", 100.0).getDataPagamento());
     }
 }
