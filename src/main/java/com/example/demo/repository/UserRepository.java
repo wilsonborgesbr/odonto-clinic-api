@@ -23,6 +23,13 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query("{ 'clinicaId': ?0, 'email': { $regex: ?1, $options: 'i' } }")
     List<User> findByClinicaIdAndEmailRegexIgnoreCase(String clinicaId, String regex);
 
+    /** Login sem código de clínica: todas as contas com este e-mail (já normalizado). */
+    List<User> findByEmail(String email);
+
+    /** Idem, tolerante a legado com maiúsculas (regex ancorado e escapado). */
+    @Query("{ 'email': { $regex: ?0, $options: 'i' } }")
+    List<User> findByEmailRegexIgnoreCase(String regex);
+
     /** Lista todos os usuários de uma clínica (para tela de gestão). */
     List<User> findByClinicaId(String clinicaId);
 }

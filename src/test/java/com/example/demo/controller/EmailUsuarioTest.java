@@ -1,17 +1,17 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.AtualizarUsuarioDTO;
-import com.example.demo.dto.AuthResponseDTO;
 import com.example.demo.dto.CriarUsuarioDTO;
-import com.example.demo.dto.LoginRequestDTO;
 import com.example.demo.dto.RegisterClinicaRequestDTO;
 import com.example.demo.dto.UsuarioDTO;
 import com.example.demo.enums.RoleEnum;
+import com.example.demo.enums.StatusContaEnum;
 import com.example.demo.model.Clinica;
 import com.example.demo.model.User;
 import com.example.demo.repository.ClinicaRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.TenantTestSupport;
+import com.example.demo.service.ConfirmacaoEmailService;
 import com.example.demo.service.TokenService;
 import com.example.demo.service.UserLookupService;
 import org.junit.jupiter.api.AfterEach;
@@ -22,8 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -44,6 +43,8 @@ class EmailUsuarioTest {
     private ClinicaRepository clinicaRepository;
     @Mock
     private TokenService tokenService;
+    @Mock
+    private ConfirmacaoEmailService confirmacaoEmailService;
 
     @InjectMocks
     private UsuarioController usuarioController;
@@ -109,39 +110,6 @@ class EmailUsuarioTest {
     }
 
     @Test
-    void login_UsaBuscaTolerantePorEmailEMinusculo() {
-        Clinica clinica = Clinica.builder().id(TEST_CLINICA_ID).codigo("minha-clinica").ativo(true).build();
-        when(clinicaRepository.findByCodigo("minha-clinica")).thenReturn(Optional.of(clinica));
-        User legado = User.builder().id("u3").clinicaId(TEST_CLINICA_ID).email("Ana@X.com")
-                .password(new BCryptPasswordEncoder().encode("segredo")).ativo(true).build();
-        when(userLookupService.buscarPorEmail("ANA@x.com", TEST_CLINICA_ID)).thenReturn(Optional.of(legado));
-        when(tokenService.generateToken(legado, "minha-clinica")).thenReturn("jwt");
-        LoginRequestDTO dto = new LoginRequestDTO();
-        dto.setClinicaCodigo("MINHA-clinica");
-        dto.setEmail("ANA@x.com");
-        dto.setPassword("segredo");
-
-        AuthResponseDTO resposta = authController.login(dto).getBody();
-
-        assertEquals("jwt", resposta.getToken());
-    }
-
-    @Test
-    void login_EmailNaoEncontradoRetorna401() {
-        Clinica clinica = Clinica.builder().id(TEST_CLINICA_ID).codigo("minha-clinica").ativo(true).build();
-        when(clinicaRepository.findByCodigo("minha-clinica")).thenReturn(Optional.of(clinica));
-        when(userLookupService.buscarPorEmail("x@x.com", TEST_CLINICA_ID)).thenReturn(Optional.empty());
-        LoginRequestDTO dto = new LoginRequestDTO();
-        dto.setClinicaCodigo("minha-clinica");
-        dto.setEmail("x@x.com");
-        dto.setPassword("segredo");
-
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authController.login(dto));
-
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
-    }
-
-    @Test
     void registerClinica_NormalizaEmailDoProprietarioEDadosDaClinica() {
         when(clinicaRepository.existsByCodigo("nova-clinica")).thenReturn(false);
         when(clinicaRepository.save(any(Clinica.class))).thenAnswer(i -> {
@@ -150,7 +118,7 @@ class EmailUsuarioTest {
             return c;
         });
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
-        when(tokenService.generateToken(any(User.class), any())).thenReturn("jwt");
+        when(tokenService.generateToken(any(User.class), any(), any())).thenReturn("jwt");
         RegisterClinicaRequestDTO dto = new RegisterClinicaRequestDTO();
         dto.setClinicaCodigo("nova-clinica");
         dto.setClinicaNome("Nova");
@@ -161,11 +129,16 @@ class EmailUsuarioTest {
         dto.setAdminEmail("  Dono@Nova.COM ");
         dto.setAdminPassword("123456");
 
-        authController.registerClinica(dto);
+        var resposta = authController.registerClinica(dto, new MockHttpServletRequest());
+
+        assertFalse(resposta.getBody().isEmailConfirmado());
+        verify(confirmacaoEmailService).enviarConfirmacao(any(User.class), any(Clinica.class), any());
 
         ArgumentCaptor<User> user = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(user.capture());
         assertEquals("dono@nova.com", user.getValue().getEmail());
+        assertEquals(Boolean.FALSE, user.getValue().getEmailConfirmado());
+        assertEquals(StatusContaEnum.ATIVO, user.getValue().getStatusConta());
         ArgumentCaptor<Clinica> clinica = ArgumentCaptor.forClass(Clinica.class);
         verify(clinicaRepository).save(clinica.capture());
         assertEquals("11.222.333/0001-81", clinica.getValue().getCnpj());

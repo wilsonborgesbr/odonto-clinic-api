@@ -42,6 +42,19 @@ public class UserLookupService {
         return candidatos.size() == 1 ? Optional.of(candidatos.get(0)) : Optional.empty();
     }
 
+    /** Todas as contas (de qualquer clínica) com este e-mail; tolera legado com maiúsculas. */
+    public List<User> buscarContasPorEmail(String email) {
+        String normalizado = FormatadorTexto.email(email);
+        if (normalizado == null) {
+            return List.of();
+        }
+        List<User> exatas = userRepository.findByEmail(normalizado);
+        if (!exatas.isEmpty()) {
+            return exatas;
+        }
+        return userRepository.findByEmailRegexIgnoreCase(regexExato(normalizado));
+    }
+
     public boolean emailEmUso(String email, String clinicaId) {
         String normalizado = FormatadorTexto.email(email);
         if (normalizado == null) {

@@ -22,6 +22,7 @@ public class UsuarioDTO {
     private RoleEnum role;
     private Set<PermissaoEnum> permissoes;
     private Boolean ativo;
+    private boolean emailConfirmado;
     private LocalDateTime createdAt;
     private UserPreferences preferences;
 
@@ -33,6 +34,7 @@ public class UsuarioDTO {
         dto.setRole(user.getRole());
         dto.setPermissoes(user.permissoesEfetivas());
         dto.setAtivo(user.getAtivo());
+        dto.setEmailConfirmado(user.emailEstaConfirmado());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setPreferences(user.getPreferences() != null
                 ? user.getPreferences()

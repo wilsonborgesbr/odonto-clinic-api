@@ -1,6 +1,7 @@
 package com.example.demo.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,6 +27,9 @@ public class SecurityConfig {
     @Autowired
     private SecurityFilter securityFilter;
 
+    @Value("${app.cors.allowed-origins}")
+    private List<String> origensPermitidas;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
@@ -38,7 +42,12 @@ public class SecurityConfig {
                 // Configuramos quais rotas são públicas e quais são privadas
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login/selecionar-clinica").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register-clinica").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/recuperar-senha").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/validar-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/redefinir-senha").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/confirmar-email").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // Qualquer outra requisição precisa de um token válido
@@ -70,14 +79,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "https://bokka.com.br",
-                "https://www.bokka.com.br",
-                "https://odonto-clinic-web.pages.dev",
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://127.0.0.1:5173"
-        ));
+        config.setAllowedOrigins(origensPermitidas);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));

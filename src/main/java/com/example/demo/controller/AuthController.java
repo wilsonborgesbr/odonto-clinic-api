@@ -1,18 +1,34 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.AuthResponseDTO;
+import com.example.demo.dto.ConfirmarEmailDTO;
+import com.example.demo.dto.ConfirmarEmailResponseDTO;
 import com.example.demo.dto.LoginRequestDTO;
+import com.example.demo.dto.LoginResponse;
+import com.example.demo.dto.MensagemDTO;
+import com.example.demo.dto.RecuperarSenhaDTO;
+import com.example.demo.dto.RedefinirSenhaDTO;
 import com.example.demo.dto.RegisterClinicaRequestDTO;
+import com.example.demo.dto.SelecionarClinicaRequestDTO;
 import com.example.demo.dto.UpdateProfileDTO;
+import com.example.demo.dto.ValidarTokenRequestDTO;
+import com.example.demo.dto.ValidarTokenResponseDTO;
 import com.example.demo.enums.RoleEnum;
+import com.example.demo.enums.StatusContaEnum;
+import com.example.demo.enums.TipoTokenAuthEnum;
 import com.example.demo.model.Clinica;
 import com.example.demo.model.User;
 import com.example.demo.repository.ClinicaRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
 import com.example.demo.util.FormatadorTexto;
+import com.example.demo.service.AuthTokenService;
+import com.example.demo.service.ConfirmacaoEmailService;
+import com.example.demo.service.LoginService;
+import com.example.demo.service.RecuperacaoSenhaService;
 import com.example.demo.service.UserLookupService;
 import com.example.demo.service.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,27 +57,59 @@ public class AuthController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private LoginService loginService;
+
+    @Autowired
+    private RecuperacaoSenhaService recuperacaoSenhaService;
+
+    @Autowired
+    private ConfirmacaoEmailService confirmacaoEmailService;
+
+    @Autowired
+    private AuthTokenService authTokenService;
+
     /**
-     * Login: (clinicaCodigo + email + senha).
-     * O código da clínica identifica o tenant; o email é único dentro dela.
+     * Login: (clinicaCodigo + email + senha). O código da clínica identifica o tenant; o email é único dentro
+     * dela. Sem código, a senha precisa casar antes de qualquer informação sobre clínicas ser devolvida:
+     * 200 com o token, ou 200 {status: SELECAO_CLINICA} quando a mesma senha casa em mais de uma clínica.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid LoginRequestDTO data) {
-        Clinica clinica = clinicaRepository.findByCodigo(data.getClinicaCodigo().toLowerCase())
-                .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Clínica não encontrada."));
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequestDTO data, HttpServletRequest request) {
+        return ResponseEntity.ok(loginService.login(data, request.getRemoteAddr()));
+    }
 
-        User user = userLookupService.buscarPorEmail(data.getEmail(), clinica.getId())
-                .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas."));
+    @PostMapping("/login/selecionar-clinica")
+    public ResponseEntity<AuthResponseDTO> selecionarClinica(
+            @RequestBody @Valid SelecionarClinicaRequestDTO data, HttpServletRequest request) {
+        return ResponseEntity.ok(loginService.selecionarClinica(data.getTicket(), data.getClinicaId(), request.getRemoteAddr()));
+    }
 
-        boolean matches = new BCryptPasswordEncoder().matches(data.getPassword(), user.getPassword());
-        if (!matches) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas.");
-        }
+    /** Resposta sempre 200 e igual, exista ou não a conta (anti-enumeração). */
+    @PostMapping("/recuperar-senha")
+    public ResponseEntity<MensagemDTO> recuperarSenha(
+            @RequestBody @Valid RecuperarSenhaDTO data, HttpServletRequest request) {
+        return ResponseEntity.ok(recuperacaoSenhaService.solicitar(data, request.getRemoteAddr()));
+    }
 
-        String token = tokenService.generateToken(user, clinica.getCodigo());
-        return ResponseEntity.ok(new AuthResponseDTO(token));
+    @PostMapping("/validar-token")
+    public ResponseEntity<ValidarTokenResponseDTO> validarToken(@RequestBody @Valid ValidarTokenRequestDTO data) {
+        return ResponseEntity.ok(recuperacaoSenhaService.validarToken(data));
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<MensagemDTO> redefinirSenha(@RequestBody @Valid RedefinirSenhaDTO data) {
+        return ResponseEntity.ok(recuperacaoSenhaService.redefinir(data));
+    }
+
+    @PostMapping("/confirmar-email")
+    public ResponseEntity<ConfirmarEmailResponseDTO> confirmarEmail(@RequestBody @Valid ConfirmarEmailDTO data) {
+        return ResponseEntity.ok(new ConfirmarEmailResponseDTO(confirmacaoEmailService.confirmar(data.getToken())));
+    }
+
+    @PostMapping("/reenviar-confirmacao")
+    public ResponseEntity<MensagemDTO> reenviarConfirmacao(HttpServletRequest request) {
+        return ResponseEntity.ok(confirmacaoEmailService.reenviar(request.getRemoteAddr()));
     }
 
     /**
@@ -69,7 +117,8 @@ public class AuthController {
      * numa única chamada. Único endpoint público de escrita além do login.
      */
     @PostMapping("/register-clinica")
-    public ResponseEntity<AuthResponseDTO> registerClinica(@RequestBody @Valid RegisterClinicaRequestDTO data) {
+    public ResponseEntity<AuthResponseDTO> registerClinica(@RequestBody @Valid RegisterClinicaRequestDTO data,
+                                                           HttpServletRequest request) {
         String codigo = data.getClinicaCodigo().toLowerCase();
 
         if (clinicaRepository.existsByCodigo(codigo)) {
@@ -98,13 +147,17 @@ public class AuthController {
                 .clinicaId(salva.getId())
                 .role(RoleEnum.PROPRIETARIO)
                 .ativo(true)
+                .emailConfirmado(false)
+                .statusConta(StatusContaEnum.ATIVO)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        userRepository.save(proprietario);
+        User salvo = userRepository.save(proprietario);
 
-        String token = tokenService.generateToken(proprietario, salva.getCodigo());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponseDTO(token));
+        confirmacaoEmailService.enviarConfirmacao(salvo, salva, request.getRemoteAddr());
+
+        String token = tokenService.generateToken(proprietario, salva.getCodigo(), salva.getNome());
+        return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponseDTO.de(token, proprietario));
     }
 
     /**
@@ -112,18 +165,27 @@ public class AuthController {
      * Novo token é emitido para refletir claims atualizadas.
      */
     @PutMapping("/profile")
-    public ResponseEntity<AuthResponseDTO> updateProfile(@RequestBody @Valid UpdateProfileDTO data) {
+    public ResponseEntity<AuthResponseDTO> updateProfile(@RequestBody @Valid UpdateProfileDTO data,
+                                                         HttpServletRequest request) {
         User currentUser = AuthContextHelper.currentUser();
 
         currentUser.setName(data.getName());
 
         String novoEmail = FormatadorTexto.email(data.getEmail());
+        boolean emailMudou = false;
         if (novoEmail != null && !novoEmail.equals(currentUser.getEmail())) {
-            if (!novoEmail.equalsIgnoreCase(currentUser.getEmail())
-                    && userLookupService.emailEmUso(novoEmail, currentUser.getClinicaId())) {
+            emailMudou = !novoEmail.equalsIgnoreCase(currentUser.getEmail());
+            if (emailMudou && userLookupService.emailEmUso(novoEmail, currentUser.getClinicaId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado nesta clínica.");
             }
             currentUser.setEmail(novoEmail);
+        }
+
+        boolean reconfirmar = emailMudou && currentUser.getRole() == RoleEnum.PROPRIETARIO;
+        if (reconfirmar) {
+            currentUser.setEmailConfirmado(false);
+            currentUser.setEmailConfirmadoEm(null);
+            authTokenService.invalidarPendentes(currentUser.getId(), TipoTokenAuthEnum.CONFIRMAR_EMAIL_DONO);
         }
 
         currentUser.setUpdatedAt(LocalDateTime.now());
@@ -132,7 +194,11 @@ public class AuthController {
         Clinica clinica = clinicaRepository.findById(currentUser.getClinicaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clínica não encontrada."));
 
-        String newToken = tokenService.generateToken(currentUser, clinica.getCodigo());
-        return ResponseEntity.ok(new AuthResponseDTO(newToken));
+        if (reconfirmar) {
+            confirmacaoEmailService.enviarConfirmacao(currentUser, clinica, request.getRemoteAddr());
+        }
+
+        String newToken = tokenService.generateToken(currentUser, clinica.getCodigo(), clinica.getNome());
+        return ResponseEntity.ok(AuthResponseDTO.de(newToken, currentUser));
     }
 }

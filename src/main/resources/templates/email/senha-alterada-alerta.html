@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Sua senha foi alterada - Bokka</title>
+<style>
+  body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  a { color: #1E4FBE; }
+  @media only screen and (max-width: 600px) {
+    .wrap { padding: 16px 12px !important; }
+    .card-body { padding: 24px 20px !important; }
+    .btn-cell { display: block !important; width: 100% !important; }
+    .btn-link { display: block !important; padding: 16px 20px !important; }
+    .h1 { font-size: 22px !important; line-height: 28px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#F8FAFC;">
+
+<!-- Texto de pré-visualização (aparece ao lado do assunto na caixa de entrada) -->
+<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
+  A senha da sua conta no Bokka foi alterada em ${dataHora}. Se não foi você, aja agora.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F8FAFC;">
+  <tr>
+    <td align="center" class="wrap" style="padding:32px 16px;">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+
+        <!-- Marca (texto + quadrado em CSS, sem imagem externa) -->
+        <tr>
+          <td align="center" style="padding:0 0 20px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="40" height="40" align="center" valign="middle" bgcolor="#2A6BF2" style="width:40px;height:40px;background-color:#2A6BF2;border-radius:10px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:22px;font-weight:700;line-height:40px;color:#FFFFFF;">B</td>
+                <td style="padding-left:10px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#0B1220;">Bokka</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Cartão -->
+        <tr>
+          <td style="background-color:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td height="4" style="height:4px;line-height:4px;font-size:4px;background-color:#2A6BF2;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="card-body" style="padding:32px 32px 28px 32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;color:#0B1220;">
+
+                  <h1 class="h1" style="margin:0 0 16px 0;font-size:24px;line-height:30px;font-weight:700;letter-spacing:-0.01em;color:#0B1220;">Sua senha foi alterada</h1>
+
+                  <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;color:#0B1220;">Olá, ${nome}!</p>
+
+                  <p style="margin:0 0 20px 0;font-size:16px;line-height:24px;color:#334155;">
+                    A senha do seu usuário na clínica <strong style="color:#0B1220;">${nomeClinica}</strong> foi alterada com sucesso.
+                  </p>
+
+                  <!-- Data e hora -->
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:21px;color:#334155;">
+                        <span style="font-size:12px;line-height:18px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#475569;">Data e hora</span><br>
+                        <strong style="font-size:16px;line-height:24px;color:#0B1220;">${dataHora}</strong>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:20px 0 24px 0;font-size:16px;line-height:24px;color:#334155;">
+                    Se foi você, não precisa fazer nada. Seus acessos continuam funcionando com a nova senha.
+                  </p>
+
+                  <!-- Alerta: se não foi você -->
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:21px;color:#92400E;">
+                        <strong style="font-size:15px;color:#92400E;">Não foi você?</strong><br>
+                        Redefina sua senha agora para proteger a conta e avise a equipe de suporte respondendo este e-mail ou escrevendo para
+                        <a href="mailto:suporte@bokka.com.br" style="color:#92400E;font-weight:700;text-decoration:underline;">suporte@bokka.com.br</a>.
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Botão -->
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center" style="padding:24px 0 24px 0;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td class="btn-cell" align="center" bgcolor="#2A6BF2" style="background-color:#2A6BF2;border-radius:8px;">
+                              <a class="btn-link" href="${link}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:8px;">Redefinir minha senha</a>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0 0 8px 0;font-size:14px;line-height:21px;color:#334155;">
+                    Se o botão não funcionar, copie e cole este endereço no navegador:
+                  </p>
+                  <p style="margin:0;font-size:13px;line-height:20px;color:#1E4FBE;word-break:break-all;">
+                    <a href="${link}" target="_blank" style="color:#1E4FBE;text-decoration:underline;">${link}</a>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Rodapé -->
+        <tr>
+          <td align="center" style="padding:24px 16px 0 16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
+            Bokka &middot; Sistema de Gestão Odontológica &middot; Suporte: <a href="mailto:suporte@bokka.com.br" style="color:#475569;text-decoration:underline;">suporte@bokka.com.br</a>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

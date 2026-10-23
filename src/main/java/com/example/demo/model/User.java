@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import com.example.demo.enums.PermissaoEnum;
 import com.example.demo.enums.RoleEnum;
+import com.example.demo.enums.StatusContaEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -70,6 +71,17 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean ativo = true;
 
+    /**
+     * Ausente (null) em contas legadas e criadas pelo painel = tratado como confirmado.
+     * Só o auto-cadastro de clínica grava {@code false} até o dono clicar no link do e-mail.
+     */
+    private Boolean emailConfirmado;
+
+    private LocalDateTime emailConfirmadoEm;
+
+    /** Ausente (null) = ATIVO. */
+    private StatusContaEnum statusConta;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -107,6 +119,15 @@ public class User implements UserDetails {
             return role.permissoesPadrao();
         }
         return EnumSet.noneOf(PermissaoEnum.class);
+    }
+
+    /** Legado sem o campo conta como confirmado. */
+    public boolean emailEstaConfirmado() {
+        return !Boolean.FALSE.equals(emailConfirmado);
+    }
+
+    public boolean contaBloqueada() {
+        return statusConta == StatusContaEnum.BLOQUEADO;
     }
 
     @Override public String getPassword() { return password; }

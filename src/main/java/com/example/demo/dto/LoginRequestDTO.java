@@ -8,10 +8,9 @@ import lombok.Data;
 public class LoginRequestDTO {
 
     /**
-     * Código único da clínica onde o usuário está cadastrado.
-     * Ex.: "odontosocorro". Corresponde a {@code Clinica.codigo}.
+     * Código único da clínica onde o usuário está cadastrado ({@code Clinica.codigo}). Opcional: sem ele,
+     * o login procura o e-mail em todas as clínicas, mas só depois de a senha casar.
      */
-    @NotBlank(message = "O código da clínica é obrigatório")
     private String clinicaCodigo;
 
     @NotBlank(message = "O email não pode estar vazio")
