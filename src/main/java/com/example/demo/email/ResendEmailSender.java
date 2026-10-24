@@ -13,9 +13,11 @@ import org.springframework.web.client.RestClient;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ResendEmailSender implements EmailService {
@@ -76,31 +78,41 @@ public class ResendEmailSender implements EmailService {
     }
 
     @Override
-    public void enviar(String destinatario, String assunto, String html) {
+    public void enviar(String destinatario, String assunto, String html, String texto, String categoria) {
         if (modoLog() && !ambienteLocal) {
             log.warn("[E-MAIL NÃO ENVIADO - CHAVE DO RESEND AUSENTE] Para: {}, Assunto: {}", destinatario, assunto);
             return;
         }
         if (modoLog()) {
-            log.info("[E-MAIL - MODO LOG, não enviado]\nDe: {}\nResponder para: {}\nPara: {}\nAssunto: {}\n{}",
-                    remetente, responderPara, destinatario, assunto, html);
+            log.info("[E-MAIL - MODO LOG, não enviado]\nDe: {}\nResponder para: {}\nPara: {}\nAssunto: {}\nCategoria: {}\n{}\n---- texto simples ----\n{}",
+                    remetente, responderPara, destinatario, assunto, categoria, html, texto);
             return;
         }
         try {
             restClient.post()
                     .contentType(MediaType.APPLICATION_JSON)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .body(Map.of(
-                            "from", remetente,
-                            "to", List.of(destinatario),
-                            "subject", assunto,
-                            "html", html,
-                            "reply_to", responderPara))
+                    .body(corpo(destinatario, assunto, html, texto, categoria))
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
             log.error("Falha ao enviar e-mail pelo Resend (assunto \"{}\"): {}", assunto, e.getMessage());
         }
+    }
+
+    private Map<String, Object> corpo(String destinatario, String assunto, String html, String texto, String categoria) {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("from", remetente);
+        corpo.put("to", List.of(destinatario));
+        corpo.put("subject", assunto);
+        corpo.put("html", html);
+        corpo.put("text", texto);
+        corpo.put("reply_to", responderPara);
+        corpo.put("headers", Map.of("X-Entity-Ref-ID", UUID.randomUUID().toString()));
+        if (categoria != null && !categoria.isBlank()) {
+            corpo.put("tags", List.of(Map.of("name", "categoria", "value", categoria)));
+        }
+        return corpo;
     }
 
     private static JdkClientHttpRequestFactory requestFactory() {

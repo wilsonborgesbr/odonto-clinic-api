@@ -1,0 +1,17 @@
+Redefinir sua senha no Bokka
+
+Olá, ${nome}!
+
+Recebemos uma solicitação para redefinir a senha do seu usuário na clínica ${nomeClinica}.
+
+Para criar uma nova senha, abra este link:
+
+${link}
+
+Este link vale por ${validade} e só pode ser usado uma vez.
+
+Não pediu essa alteração? Pode ignorar este e-mail: sua senha continua a mesma.
+
+--
+Você recebeu este e-mail porque alguém solicitou a redefinição de senha da sua conta no Bokka.
+Bokka · Sistema de Gestão Odontológica · Suporte: suporte@bokka.com.br

@@ -99,8 +99,13 @@ class RecuperacaoSenhaServiceTest {
         verify(authTokenService).emitir("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
         ArgumentCaptor<String> assunto = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> html = ArgumentCaptor.forClass(String.class);
-        verify(emailService).enviar(eq("ana@x.com"), assunto.capture(), html.capture());
-        assertEquals("Recuperação de senha - Consultório Tainah (Bokka)", assunto.getValue());
+        ArgumentCaptor<String> texto = ArgumentCaptor.forClass(String.class);
+        verify(emailService).enviar(eq("ana@x.com"), assunto.capture(), html.capture(), texto.capture(), eq("reset-senha"));
+        assertEquals("Redefinir sua senha no Bokka", assunto.getValue());
+        assertTrue(texto.getValue().contains("\nhttps://bokka.com.br/redefinir-senha?token=" + TOKEN + "&c=tainah\n"));
+        assertTrue(texto.getValue().contains("Ana Souza"));
+        assertTrue(texto.getValue().contains("30 minutos"));
+        assertFalse(texto.getValue().contains("${"));
         assertTrue(html.getValue().contains("https://bokka.com.br/redefinir-senha?token=" + TOKEN + "&amp;c=tainah"));
         assertTrue(html.getValue().contains("Ana Souza"));
         assertTrue(html.getValue().contains("30 minutos"));
@@ -120,7 +125,7 @@ class RecuperacaoSenhaServiceTest {
 
         assertEquals(existente, emailInexistente);
         assertEquals(existente, clinicaInexistente);
-        verify(emailService, times(1)).enviar(any(), any(), any());
+        verify(emailService, times(1)).enviar(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -136,7 +141,7 @@ class RecuperacaoSenhaServiceTest {
 
         verify(authTokenService).emitir("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
         verify(authTokenService).emitir("u2", "c2", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
-        verify(emailService, times(2)).enviar(eq("ana@x.com"), any(), any());
+        verify(emailService, times(2)).enviar(eq("ana@x.com"), any(), any(), any(), any());
     }
 
     @Test
@@ -156,7 +161,7 @@ class RecuperacaoSenhaServiceTest {
     @Test
     void solicitar_FalhaNoEnvioNaoChegaAoUsuario() {
         contaExiste();
-        doThrow(new RuntimeException("resend fora do ar")).when(emailService).enviar(any(), any(), any());
+        doThrow(new RuntimeException("resend fora do ar")).when(emailService).enviar(any(), any(), any(), any(), any());
 
         MensagemDTO r = assertDoesNotThrow(() -> service.solicitar(pedido("ana@x.com", "tainah"), IP));
 
@@ -183,7 +188,7 @@ class RecuperacaoSenhaServiceTest {
         MensagemDTO quarta = service.solicitar(pedido("ana@x.com", "tainah"), "10.0.1.4");
 
         assertEquals(primeira, quarta);
-        verify(emailService, times(RecuperacaoSenhaService.MAX_PEDIDOS_POR_EMAIL)).enviar(any(), any(), any());
+        verify(emailService, times(RecuperacaoSenhaService.MAX_PEDIDOS_POR_EMAIL)).enviar(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -206,7 +211,7 @@ class RecuperacaoSenhaServiceTest {
             service.solicitar(pedido("conta" + i + "@x.com", "tainah"), "10.0.3.3");
         }
 
-        verify(emailService, times(RecuperacaoSenhaService.MAX_PEDIDOS_POR_IP)).enviar(any(), any(), any());
+        verify(emailService, times(RecuperacaoSenhaService.MAX_PEDIDOS_POR_IP)).enviar(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -299,7 +304,10 @@ class RecuperacaoSenhaServiceTest {
         verify(authTokenService).invalidarPendentes("u1", TipoTokenAuthEnum.RESET_SENHA);
 
         ArgumentCaptor<String> html = ArgumentCaptor.forClass(String.class);
-        verify(emailService).enviar(eq("ana@x.com"), eq("Sua senha foi alterada - Bokka"), html.capture());
+        ArgumentCaptor<String> texto = ArgumentCaptor.forClass(String.class);
+        verify(emailService).enviar(eq("ana@x.com"), eq("Sua senha foi alterada - Bokka"), html.capture(), texto.capture(), eq("senha-alterada"));
+        assertTrue(texto.getValue().contains("\nhttps://bokka.com.br/recuperar-senha?c=tainah\n"));
+        assertFalse(texto.getValue().contains("NovaSenha!9"));
         assertTrue(html.getValue().contains("https://bokka.com.br/recuperar-senha?c=tainah"));
         assertTrue(html.getValue().matches("(?s).*\\d{2}/\\d{2}/\\d{4} às \\d{2}:\\d{2}.*"));
         assertFalse(html.getValue().contains("NovaSenha!9"));
@@ -336,7 +344,7 @@ class RecuperacaoSenhaServiceTest {
                 .thenReturn(AuthToken.builder().userId("u1").build());
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
         when(clinicaRepository.findById("c1")).thenReturn(Optional.of(clinica));
-        doThrow(new RuntimeException("resend fora")).when(emailService).enviar(any(), any(), any());
+        doThrow(new RuntimeException("resend fora")).when(emailService).enviar(any(), any(), any(), any(), any());
 
         MensagemDTO r = assertDoesNotThrow(() -> service.redefinir(redefinirDto(TOKEN, "NovaSenha!9")));
 

@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,8 +35,19 @@ public class EmailTemplateService {
      * com escape de HTML. Placeholder sem valor é erro de programação e lança exceção.
      */
     public String renderizar(String template, Map<String, String> variaveis) {
-        String html = carregar(template);
-        Matcher m = PLACEHOLDER.matcher(html);
+        return substituir(carregar(template, "html"), template, variaveis, valor -> HtmlUtils.htmlEscape(valor, StandardCharsets.UTF_8.name()));
+    }
+
+    /**
+     * Carrega {@code templates/email/<template>.txt} (versão texto simples do e-mail). Sem escape de HTML;
+     * quebras de linha dos valores viram espaço para que um valor não consiga criar linhas novas no texto.
+     */
+    public String renderizarTexto(String template, Map<String, String> variaveis) {
+        return substituir(carregar(template, "txt"), template, variaveis, valor -> valor.replaceAll("[\r\n]+", " "));
+    }
+
+    private String substituir(String modelo, String template, Map<String, String> variaveis, UnaryOperator<String> formatar) {
+        Matcher m = PLACEHOLDER.matcher(modelo);
         StringBuilder saida = new StringBuilder();
         while (m.find()) {
             String valor = variaveis.get(m.group(1));
@@ -43,7 +55,7 @@ public class EmailTemplateService {
                 throw new IllegalStateException(
                         "Template '" + template + "': variável '" + m.group(1) + "' não informada.");
             }
-            m.appendReplacement(saida, Matcher.quoteReplacement(HtmlUtils.htmlEscape(valor, StandardCharsets.UTF_8.name())));
+            m.appendReplacement(saida, Matcher.quoteReplacement(formatar.apply(valor)));
         }
         m.appendTail(saida);
         return saida.toString();
@@ -69,15 +81,15 @@ public class EmailTemplateService {
         return linkFrontend(caminho, parametros);
     }
 
-    private String carregar(String template) {
+    private String carregar(String template, String extensao) {
         if (template == null || !NOME_VALIDO.matcher(template).matches()) {
             throw new IllegalArgumentException("Nome de template inválido: " + template);
         }
-        return cache.computeIfAbsent(template, nome -> {
-            try (var in = new ClassPathResource(PASTA + nome + ".html").getInputStream()) {
+        return cache.computeIfAbsent(template + "." + extensao, chave -> {
+            try (var in = new ClassPathResource(PASTA + chave).getInputStream()) {
                 return new String(in.readAllBytes(), StandardCharsets.UTF_8);
             } catch (IOException e) {
-                throw new UncheckedIOException("Template de e-mail não encontrado: " + nome, e);
+                throw new UncheckedIOException("Template de e-mail não encontrado: " + chave, e);
             }
         });
     }

@@ -92,7 +92,10 @@ class ConfirmacaoEmailServiceTest {
 
         verify(authTokenService).emitir("u1", "c1", TipoTokenAuthEnum.CONFIRMAR_EMAIL_DONO, Duration.ofHours(48), IP);
         ArgumentCaptor<String> html = ArgumentCaptor.forClass(String.class);
-        verify(emailService).enviar(eq("dono@x.com"), eq("Confirme seu e-mail - Bokka"), html.capture());
+        ArgumentCaptor<String> texto = ArgumentCaptor.forClass(String.class);
+        verify(emailService).enviar(eq("dono@x.com"), eq("Confirme seu e-mail - Bokka"), html.capture(), texto.capture(), eq("confirmar-email"));
+        assertTrue(texto.getValue().contains("\nhttps://bokka.com.br/confirmar-email?token=" + TOKEN + "&c=tainah\n"));
+        assertTrue(texto.getValue().contains("48 horas"));
         assertTrue(html.getValue().contains("https://bokka.com.br/confirmar-email?token=" + TOKEN + "&amp;c=tainah"));
         assertTrue(html.getValue().contains("Dra. Tainah"));
         assertTrue(html.getValue().contains("Consultório Tainah"));
@@ -102,7 +105,7 @@ class ConfirmacaoEmailServiceTest {
     @Test
     void enviarConfirmacao_FalhaDeEnvioOuDeTokenNuncaVazaParaQuemChama() {
         tokenSeraEmitido();
-        doThrow(new RuntimeException("resend fora")).when(emailService).enviar(any(), any(), any());
+        doThrow(new RuntimeException("resend fora")).when(emailService).enviar(any(), any(), any(), any(), any());
         assertDoesNotThrow(() -> service.enviarConfirmacao(dono, clinica, IP));
 
         when(authTokenService.emitir(any(), any(), any(), any(), any())).thenThrow(new RuntimeException("mongo fora"));
@@ -181,7 +184,7 @@ class ConfirmacaoEmailServiceTest {
         MensagemDTO r = service.reenviar(IP);
 
         assertEquals(ConfirmacaoEmailService.MSG_REENVIADO, r.mensagem());
-        verify(emailService).enviar(eq("dono@x.com"), any(), any());
+        verify(emailService).enviar(eq("dono@x.com"), any(), any(), any(), any());
     }
 
     @Test
@@ -228,7 +231,7 @@ class ConfirmacaoEmailServiceTest {
 
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
         assertEquals(ConfirmacaoEmailService.MSG_LIMITE, ex.getReason());
-        verify(emailService, times(ConfirmacaoEmailService.MAX_REENVIOS_POR_USUARIO)).enviar(any(), any(), any());
+        verify(emailService, times(ConfirmacaoEmailService.MAX_REENVIOS_POR_USUARIO)).enviar(any(), any(), any(), any(), any());
     }
 
     @Test

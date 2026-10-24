@@ -1,0 +1,19 @@
+Bem-vindo(a) ao Bokka!
+
+Olá, ${nome}!
+
+A clínica ${nomeClinica} já está criada. Falta só um passo: confirmar que este e-mail é seu. Assim você garante o acesso à conta e consegue recuperar a senha quando precisar.
+
+Você pode continuar usando o sistema normalmente enquanto isso.
+
+Para confirmar, abra este link:
+
+${link}
+
+Este link vale por ${validade}. Depois disso, você pode pedir um novo dentro do painel do Bokka.
+
+Não criou uma conta no Bokka? Pode ignorar este e-mail. Sem a confirmação, nada será ativado para este endereço.
+
+--
+Você recebeu este e-mail porque uma conta foi criada no Bokka com este endereço.
+Bokka · Sistema de Gestão Odontológica · Suporte: suporte@bokka.com.br

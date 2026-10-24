@@ -108,7 +108,7 @@ class AuthFluxosIntegracaoTest {
         long limite = System.currentTimeMillis() + 8000;
         while (System.currentTimeMillis() < limite) {
             List<Invocation> envios = org.mockito.Mockito.mockingDetails(emailService).getInvocations().stream()
-                    .filter(i -> i.getArguments().length == 3 && destino.equals(i.getArgument(0))).toList();
+                    .filter(i -> i.getArguments().length == 5 && destino.equals(i.getArgument(0))).toList();
             if (envios.size() >= n) {
                 return envios.get(n - 1).getArgument(2);
             }
@@ -120,13 +120,13 @@ class AuthFluxosIntegracaoTest {
 
     private String assuntoDoEmail(String destino, int n) {
         return org.mockito.Mockito.mockingDetails(emailService).getInvocations().stream()
-                .filter(i -> i.getArguments().length == 3 && destino.equals(i.getArgument(0)))
+                .filter(i -> i.getArguments().length == 5 && destino.equals(i.getArgument(0)))
                 .toList().get(n - 1).getArgument(1);
     }
 
     private int totalDeEmails(String destino) {
         return (int) org.mockito.Mockito.mockingDetails(emailService).getInvocations().stream()
-                .filter(i -> i.getArguments().length == 3 && destino.equals(i.getArgument(0))).count();
+                .filter(i -> i.getArguments().length == 5 && destino.equals(i.getArgument(0))).count();
     }
 
     private String tokenDoLink(String html, String rota) {
@@ -235,7 +235,7 @@ class AuthFluxosIntegracaoTest {
         MvcResult pedido = postJson("/auth/recuperar-senha", "{\"email\":\"" + email + "\",\"clinicaCodigo\":\"" + codigo + "\"}", "10.20.0.1", null);
         assertEquals(200, pedido.getResponse().getStatus());
         String html = htmlDoEmail(email, 2);
-        assertEquals("Recuperação de senha - Clínica " + codigo + " (Bokka)", assuntoDoEmail(email, 2));
+        assertEquals("Redefinir sua senha no Bokka", assuntoDoEmail(email, 2));
         assertTrue(html.contains("c=" + codigo));
         String token = tokenDoLink(html, "redefinir-senha");
 

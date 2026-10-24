@@ -1,127 +1,52 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="light only">
-<meta name="supported-color-schemes" content="light only">
 <title>Confirme seu e-mail - Bokka</title>
 <style>
-  body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-  table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  body { margin: 0; padding: 0; }
   a { color: #1E4FBE; }
   @media only screen and (max-width: 600px) {
     .wrap { padding: 16px 12px !important; }
     .card-body { padding: 24px 20px !important; }
-    .btn-cell { display: block !important; width: 100% !important; }
-    .btn-link { display: block !important; padding: 16px 20px !important; }
-    .h1 { font-size: 22px !important; line-height: 28px !important; }
+    .btn-link { display: block !important; }
   }
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:#F8FAFC;">
-
-<!-- Texto de pré-visualização (aparece ao lado do assunto na caixa de entrada) -->
-<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
-  Confirme seu e-mail para concluir o cadastro de ${nomeClinica} no Bokka.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
-</div>
-
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F8FAFC;">
   <tr>
-    <td align="center" class="wrap" style="padding:32px 16px;">
-
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
-
-        <!-- Marca (texto + quadrado em CSS, sem imagem externa) -->
+    <td align="center" class="wrap" style="padding:32px 16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#FFFFFF;border:1px solid #E2E8F0;border-top:4px solid #2A6BF2;border-radius:12px;">
         <tr>
-          <td align="center" style="padding:0 0 20px 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <td class="card-body" style="padding:32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;color:#334155;font-size:16px;line-height:24px;text-align:left;">
+            <p style="margin:0 0 16px 0;font-size:20px;line-height:26px;font-weight:700;color:#2A6BF2;">Bokka</p>
+            <h1 style="margin:0 0 16px 0;font-size:24px;line-height:30px;font-weight:700;color:#0B1220;">Bem-vindo(a) ao Bokka!</h1>
+            <p style="margin:0 0 12px 0;">Olá, ${nome}!</p>
+            <p style="margin:0 0 12px 0;">A clínica <strong style="color:#0B1220;">${nomeClinica}</strong> já está criada. Falta só um passo: confirmar que este e-mail é seu. Assim você garante o acesso à conta e consegue recuperar a senha quando precisar.</p>
+            <p style="margin:0 0 16px 0;">Você pode continuar usando o sistema normalmente enquanto isso.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px 0;">
               <tr>
-                <td width="40" height="40" align="center" valign="middle" bgcolor="#2A6BF2" style="width:40px;height:40px;background-color:#2A6BF2;border-radius:10px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:22px;font-weight:700;line-height:40px;color:#FFFFFF;">B</td>
-                <td style="padding-left:10px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#0B1220;">Bokka</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Cartão -->
-        <tr>
-          <td style="background-color:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td height="4" style="height:4px;line-height:4px;font-size:4px;background-color:#2A6BF2;">&nbsp;</td>
-              </tr>
-              <tr>
-                <td class="card-body" style="padding:32px 32px 28px 32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;color:#0B1220;">
-
-                  <h1 class="h1" style="margin:0 0 16px 0;font-size:24px;line-height:30px;font-weight:700;letter-spacing:-0.01em;color:#0B1220;">Bem-vindo(a) ao Bokka!</h1>
-
-                  <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;color:#0B1220;">Olá, ${nome}!</p>
-
-                  <p style="margin:0 0 16px 0;font-size:16px;line-height:24px;color:#334155;">
-                    A clínica <strong style="color:#0B1220;">${nomeClinica}</strong> já está criada. Falta só um passo:
-                    confirmar que este e-mail é seu. Assim você garante o acesso à conta e consegue recuperar a senha quando precisar.
-                  </p>
-
-                  <p style="margin:0 0 24px 0;font-size:16px;line-height:24px;color:#334155;">
-                    Você pode continuar usando o sistema normalmente enquanto isso.
-                  </p>
-
-                  <!-- Botão -->
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td align="center" style="padding:0 0 24px 0;">
-                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                          <tr>
-                            <td class="btn-cell" align="center" bgcolor="#2A6BF2" style="background-color:#2A6BF2;border-radius:8px;">
-                              <a class="btn-link" href="${link}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:8px;">Confirmar meu e-mail</a>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <!-- Validade -->
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:21px;color:#334155;">
-                        Este link vale por <strong style="color:#0B1220;">${validade}</strong>. Depois disso, você pode pedir um novo dentro do painel do Bokka.
-                      </td>
-                    </tr>
-                  </table>
-
-                  <p style="margin:24px 0 8px 0;font-size:14px;line-height:21px;color:#334155;">
-                    Se o botão não funcionar, copie e cole este endereço no navegador:
-                  </p>
-                  <p style="margin:0 0 24px 0;font-size:13px;line-height:20px;color:#1E4FBE;word-break:break-all;">
-                    <a href="${link}" target="_blank" style="color:#1E4FBE;text-decoration:underline;">${link}</a>
-                  </p>
-
-                  <p style="margin:0;padding-top:20px;border-top:1px solid #E2E8F0;font-size:14px;line-height:21px;color:#334155;">
-                    <strong style="color:#0B1220;">Não criou uma conta no Bokka?</strong>
-                    Pode ignorar este e-mail. Sem a confirmação, nada será ativado para este endereço.
-                  </p>
-
+                <td align="center" bgcolor="#2A6BF2" style="background-color:#2A6BF2;border-radius:8px;">
+                  <a class="btn-link" href="${link}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#FFFFFF;text-decoration:none;">Confirmar meu e-mail</a>
                 </td>
               </tr>
             </table>
+            <p style="margin:0 0 24px 0;padding:12px 16px;background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;line-height:21px;">Este link vale por <strong style="color:#0B1220;">${validade}</strong>. Depois disso, você pode pedir um novo dentro do painel do Bokka.</p>
+            <p style="margin:0 0 4px 0;font-size:14px;line-height:21px;">Se o botão não funcionar, copie e cole este endereço no navegador:</p>
+            <p style="margin:0 0 24px 0;font-size:13px;line-height:20px;word-break:break-all;"><a href="${link}" target="_blank" style="color:#1E4FBE;">${link}</a></p>
+            <p style="margin:0;padding-top:20px;border-top:1px solid #E2E8F0;font-size:14px;line-height:21px;"><strong style="color:#0B1220;">Não criou uma conta no Bokka?</strong> Pode ignorar este e-mail. Sem a confirmação, nada será ativado para este endereço.</p>
           </td>
         </tr>
-
-        <!-- Rodapé -->
-        <tr>
-          <td align="center" style="padding:24px 16px 0 16px;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
-            Bokka &middot; Sistema de Gestão Odontológica &middot; Suporte: <a href="mailto:suporte@bokka.com.br" style="color:#475569;text-decoration:underline;">suporte@bokka.com.br</a>
-          </td>
-        </tr>
-
       </table>
-
+      <p style="margin:20px 0 0 0;font-family:'DM Sans','Segoe UI',-apple-system,Roboto,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;text-align:center;">
+        Você recebeu este e-mail porque uma conta foi criada no Bokka com este endereço.<br>
+        Bokka &middot; Sistema de Gestão Odontológica &middot; Suporte: <a href="mailto:suporte@bokka.com.br" style="color:#475569;">suporte@bokka.com.br</a>
+      </p>
     </td>
   </tr>
 </table>
-
 </body>
 </html>

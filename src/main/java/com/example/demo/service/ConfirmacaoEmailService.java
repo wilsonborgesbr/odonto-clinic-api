@@ -26,6 +26,7 @@ public class ConfirmacaoEmailService {
 
     static final Duration VALIDADE = Duration.ofHours(48);
     static final String TEXTO_VALIDADE = "48 horas";
+    static final String ASSUNTO = "Confirme seu e-mail - Bokka";
     static final int MAX_REENVIOS_POR_USUARIO = 3;
     static final int MAX_REENVIOS_POR_IP = 10;
     static final Duration JANELA = Duration.ofMinutes(15);
@@ -66,12 +67,15 @@ public class ConfirmacaoEmailService {
         dispatcher.executar("confirmar-email-dono", () -> {
             var emitido = authTokenService.emitir(userId, clinicaId, TipoTokenAuthEnum.CONFIRMAR_EMAIL_DONO, VALIDADE, ip);
             String link = templateService.linkFrontend("/confirmar-email", "token", emitido.token(), "c", codigo);
-            String html = templateService.renderizar("confirmar-email-dono", Map.of(
+            Map<String, String> variaveis = Map.of(
                     "nome", nome == null ? "" : nome,
                     "nomeClinica", nomeClinica == null ? "" : nomeClinica,
                     "link", link,
-                    "validade", TEXTO_VALIDADE));
-            emailService.enviar(email, "Confirme seu e-mail - Bokka", html);
+                    "validade", TEXTO_VALIDADE);
+            emailService.enviar(email, ASSUNTO,
+                    templateService.renderizar("confirmar-email-dono", variaveis),
+                    templateService.renderizarTexto("confirmar-email-dono", variaveis),
+                    "confirmar-email");
         });
     }
 

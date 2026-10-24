@@ -1,0 +1,17 @@
+Sua senha foi alterada
+
+Olá, ${nome}!
+
+A senha do seu usuário na clínica ${nomeClinica} foi alterada com sucesso em ${dataHora}.
+
+Se foi você, não precisa fazer nada. Seus acessos continuam funcionando com a nova senha.
+
+Não foi você? Redefina sua senha agora para proteger a conta e avise a equipe de suporte respondendo este e-mail ou escrevendo para suporte@bokka.com.br.
+
+Para redefinir a senha, abra este link:
+
+${link}
+
+--
+Você recebeu este e-mail porque a senha da sua conta no Bokka foi alterada.
+Bokka · Sistema de Gestão Odontológica · Suporte: suporte@bokka.com.br

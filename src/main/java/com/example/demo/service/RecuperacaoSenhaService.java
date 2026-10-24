@@ -38,6 +38,8 @@ public class RecuperacaoSenhaService {
     static final String MSG_NEUTRA = "Se os dados informados estiverem corretos, enviamos as instruções para o seu e-mail.";
     static final Duration VALIDADE = Duration.ofMinutes(30);
     static final String TEXTO_VALIDADE = "30 minutos";
+    static final String ASSUNTO_RESET = "Redefinir sua senha no Bokka";
+    static final String ASSUNTO_ALERTA = "Sua senha foi alterada - Bokka";
     static final int MAX_PEDIDOS_POR_EMAIL = 3;
     static final int MAX_PEDIDOS_POR_IP = 10;
     static final Duration JANELA = Duration.ofMinutes(15);
@@ -155,12 +157,15 @@ public class RecuperacaoSenhaService {
         dispatcher.executar("reset-senha", () -> {
             var emitido = authTokenService.emitir(userId, clinicaId, TipoTokenAuthEnum.RESET_SENHA, VALIDADE, ip);
             String link = templateService.linkFrontend("/redefinir-senha", "token", emitido.token(), "c", codigo);
-            String html = templateService.renderizar("reset-senha", Map.of(
+            Map<String, String> variaveis = Map.of(
                     "nome", vazioSeNulo(nome),
                     "nomeClinica", vazioSeNulo(nomeClinica),
                     "link", link,
-                    "validade", TEXTO_VALIDADE));
-            emailService.enviar(destino, "Recuperação de senha - " + vazioSeNulo(nomeClinica) + " (Bokka)", html);
+                    "validade", TEXTO_VALIDADE);
+            emailService.enviar(destino, ASSUNTO_RESET,
+                    templateService.renderizar("reset-senha", variaveis),
+                    templateService.renderizarTexto("reset-senha", variaveis),
+                    "reset-senha");
         });
     }
 
@@ -172,12 +177,15 @@ public class RecuperacaoSenhaService {
         String dataHora = DATA_HORA.format(java.time.ZonedDateTime.now(FusoBrasil.ZONA));
         dispatcher.executar("senha-alterada-alerta", () -> {
             String link = templateService.linkFrontend("/recuperar-senha", "c", codigo);
-            String html = templateService.renderizar("senha-alterada-alerta", Map.of(
+            Map<String, String> variaveis = Map.of(
                     "nome", nome,
                     "nomeClinica", nomeClinica,
                     "link", link,
-                    "dataHora", dataHora));
-            emailService.enviar(destino, "Sua senha foi alterada - Bokka", html);
+                    "dataHora", dataHora);
+            emailService.enviar(destino, ASSUNTO_ALERTA,
+                    templateService.renderizar("senha-alterada-alerta", variaveis),
+                    templateService.renderizarTexto("senha-alterada-alerta", variaveis),
+                    "senha-alterada");
         });
     }
 

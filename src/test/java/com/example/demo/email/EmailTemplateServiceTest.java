@@ -33,6 +33,68 @@ class EmailTemplateServiceTest {
         assertTrue(html.contains("Consultório Tainah Santos"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"reset-senha", "confirmar-email-dono", "senha-alterada-alerta"})
+    void renderizarTexto_VersaoTextoLimpaComUmLinkEmLinhaPropria(String template) {
+        String texto = service.renderizarTexto(template, variaveis());
+        String link = "http://localhost:5173/redefinir-senha?token=abc&c=tainah";
+
+        assertFalse(texto.contains("${"), "sobrou placeholder em " + template);
+        assertFalse(texto.contains("<"), "texto simples não deve ter HTML");
+        assertFalse(texto.contains("&nbsp;") || texto.contains("&zwnj;") || texto.contains("\u200c"));
+        assertTrue(texto.contains("Maria"));
+        assertTrue(texto.contains("Consultório Tainah Santos"));
+        assertTrue(texto.contains("\n" + link + "\n"), "link sem escape, em linha própria");
+        assertEquals(texto.indexOf(link), texto.lastIndexOf(link), "link aparece uma única vez");
+        String primeiraLinha = texto.lines().findFirst().orElse("");
+        assertFalse(primeiraLinha.isBlank());
+        assertNotEquals(primeiraLinha.toUpperCase(), primeiraLinha, "título não deve vir em maiúsculas");
+    }
+
+    @Test
+    void renderizarTexto_ResetTemRodapeDeMotivoSemDadosInventados() {
+        String texto = service.renderizarTexto("reset-senha", variaveis());
+
+        assertTrue(texto.contains("Você recebeu este e-mail porque alguém solicitou a redefinição de senha da sua conta no Bokka."));
+        assertFalse(texto.toLowerCase().contains("cnpj"));
+    }
+
+    @Test
+    void renderizarTexto_NaoEscapaHtmlMasNaoDeixaValorCriarLinhas() {
+        Map<String, String> v = variaveis();
+        v.put("nome", "Ana & Cia\nBcc: x@y.com\r\nOutra");
+
+        String texto = service.renderizarTexto("reset-senha", v);
+
+        assertTrue(texto.contains("Olá, Ana & Cia Bcc: x@y.com Outra!"));
+        assertFalse(texto.contains("&amp;"));
+    }
+
+    @Test
+    void renderizarTexto_VariavelAusenteLancaExcecao() {
+        Map<String, String> v = variaveis();
+        v.remove("nomeClinica");
+
+        assertThrows(IllegalStateException.class, () -> service.renderizarTexto("reset-senha", v));
+    }
+
+    @Test
+    void renderizarTexto_NomeInvalidoEInexistenteLancamExcecao() {
+        assertThrows(IllegalArgumentException.class, () -> service.renderizarTexto("../application", variaveis()));
+        assertThrows(RuntimeException.class, () -> service.renderizarTexto("nao-existe", variaveis()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"reset-senha", "confirmar-email-dono", "senha-alterada-alerta"})
+    void renderizar_HtmlSemPreheaderEscondidoNemImagemRemota(String template) {
+        String html = service.renderizar(template, variaveis());
+
+        assertFalse(html.contains("display:none"), "sem texto escondido");
+        assertFalse(html.contains("&zwnj;"));
+        assertFalse(html.contains("<img"));
+        assertFalse(html.toLowerCase().contains("text-transform:uppercase"));
+    }
+
     @Test
     void renderizar_UsaOLinkInformadoNoTemplateDeReset() {
         String html = service.renderizar("reset-senha", variaveis());
