@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/register-clinica").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/recuperar-senha").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/validar-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/validar-codigo-recuperacao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/redefinir-senha").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/confirmar-email").permitAll()
                         .requestMatchers("/error").permitAll()

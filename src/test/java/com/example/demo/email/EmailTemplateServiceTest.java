@@ -19,6 +19,8 @@ class EmailTemplateServiceTest {
         v.put("nomeClinica", "Consultório Tainah Santos");
         v.put("link", "http://localhost:5173/redefinir-senha?token=abc&c=tainah");
         v.put("validade", "30 minutos");
+        v.put("codigoFormatado", "849 201");
+        v.put("validadeCodigo", "15 minutos");
         v.put("dataHora", "22/10/2026 às 10:15");
         return v;
     }

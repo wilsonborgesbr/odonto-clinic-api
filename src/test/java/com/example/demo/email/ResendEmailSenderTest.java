@@ -73,7 +73,7 @@ class ResendEmailSenderTest {
     }
 
     private static final String HTML_COM_TOKEN = "<a href=\"https://bokka.com.br/redefinir-senha?token=SEGREDO123&c=tainah\">Redefinir</a>";
-    private static final String TEXTO_COM_TOKEN = "Abra: https://bokka.com.br/redefinir-senha?token=SEGREDO123&c=tainah";
+    private static final String TEXTO_COM_TOKEN = "Abra: https://bokka.com.br/redefinir-senha?token=SEGREDO123&c=tainah\nCódigo:\n849 201";
 
     @Test
     void semChaveEmUrlPublica_NaoImprimeCorpoNemLinkApenasDestinatarioEAssuntoEmWarn() {
@@ -94,6 +94,8 @@ class ResendEmailSenderTest {
         assertFalse(tudo.contains("redefinir-senha"));
         assertFalse(tudo.contains("<a href"));
         assertFalse(tudo.contains("Abra:"));
+        assertFalse(tudo.contains("849 201"), "o código de 6 dígitos nunca vai para o log em URL pública");
+        assertFalse(tudo.contains("849201"));
     }
 
     @Test
@@ -108,6 +110,7 @@ class ResendEmailSenderTest {
 
             servidor.verify();
             assertTrue(saidaDoLog().contains("SEGREDO123"), local);
+            assertTrue(saidaDoLog().contains("849 201"), "em localhost o modo Log pode mostrar o código: " + local);
             assertTrue(saidaDoLog().contains("MODO LOG"), local);
         }
     }

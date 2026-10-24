@@ -13,6 +13,7 @@ import java.time.Instant;
 
 /**
  * Token de uso único (reset de senha, confirmação de e-mail, ativação). Só o hash SHA-256 é gravado.
+ * O token de reset pode carregar também um código de 6 dígitos, do qual só o HMAC com sal é gravado.
  *
  * <p>O projeto não cria índices automaticamente: o único em {@code tokenHash} e o TTL em
  * {@code expiraEm} são criados por {@code scripts/indices-auth-tokens.js}.
@@ -45,4 +46,17 @@ public class AuthToken {
     private Instant criadoEm;
 
     private String ipSolicitacao;
+
+    /** HMAC-SHA256 (chave do servidor, sal + código). Nulo se o token não tem código numérico. */
+    private String codigoHash;
+
+    /** Sal aleatório de 16 bytes, em hexadecimal. */
+    private String codigoSalt;
+
+    private Instant codigoExpiraEm;
+
+    /** Palpites errados do código; incrementado de forma atômica com {@code $inc}. */
+    private int codigoTentativas;
+
+    private Boolean codigoBloqueado;
 }

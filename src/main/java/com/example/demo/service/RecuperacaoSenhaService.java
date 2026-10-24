@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.dto.MensagemDTO;
 import com.example.demo.dto.RecuperarSenhaDTO;
 import com.example.demo.dto.RedefinirSenhaDTO;
+import com.example.demo.dto.ValidarCodigoRecuperacaoDTO;
+import com.example.demo.dto.ValidarCodigoResponseDTO;
 import com.example.demo.dto.ValidarTokenRequestDTO;
 import com.example.demo.dto.ValidarTokenResponseDTO;
 import com.example.demo.email.EmailDispatcher;
@@ -17,6 +19,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.util.FormatadorTexto;
 import com.example.demo.util.FusoBrasil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,13 @@ public class RecuperacaoSenhaService {
     static final String MSG_NEUTRA = "Se os dados informados estiverem corretos, enviamos as instruções para o seu e-mail.";
     static final Duration VALIDADE = Duration.ofMinutes(30);
     static final String TEXTO_VALIDADE = "30 minutos";
+    static final Duration VALIDADE_CODIGO = Duration.ofMinutes(15);
+    static final String TEXTO_VALIDADE_CODIGO = "15 minutos";
+    static final Duration VALIDADE_TICKET = Duration.ofMinutes(5);
+    static final int MAX_VALIDACOES_POR_EMAIL = 5;
+    static final int MAX_VALIDACOES_POR_IP = 10;
+    static final String MSG_CODIGO_INVALIDO = "Código inválido ou expirado. Verifique os dados ou solicite um novo.";
+    static final String MSG_LIMITE_CODIGO = "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
     static final String ASSUNTO_RESET = "Redefinir sua senha no Bokka";
     static final String ASSUNTO_ALERTA = "Sua senha foi alterada - Bokka";
     static final int MAX_PEDIDOS_POR_EMAIL = 3;
@@ -73,6 +83,10 @@ public class RecuperacaoSenhaService {
     @Autowired
     private RateLimitService rateLimitService;
 
+    /** Piso de tempo da validação do código: toda resposta (certa ou errada) leva pelo menos isto. */
+    @Value("${recuperacao.codigo.tempo-minimo-ms:250}")
+    private long tempoMinimoValidacaoMs = 250;
+
     /**
      * Sempre devolve a mesma mensagem, exista a conta ou não, e mesmo com o limite estourado. O que depende
      * de a conta existir (emitir token e enviar) roda em segundo plano para não alterar o tempo de resposta.
@@ -89,6 +103,50 @@ public class RecuperacaoSenhaService {
             enviarReset(alvo, ip);
         }
         return new MensagemDTO(MSG_NEUTRA);
+    }
+
+    /**
+     * Passo 1 do fluxo por código: confere o código de 6 dígitos e devolve um ticket de 5 minutos para o
+     * {@code /redefinir-senha}. Conta inexistente, clínica inexistente ou inativa, código errado, vencido,
+     * bloqueado ou já usado dão a mesma resposta (400), e o tempo é nivelado por um piso fixo.
+     */
+    public ValidarCodigoResponseDTO validarCodigo(ValidarCodigoRecuperacaoDTO dto, String ip) {
+        String email = FormatadorTexto.email(dto.getEmail());
+        boolean porIp = rateLimitService.registrarSePermitido("validar-codigo:ip:" + ip, MAX_VALIDACOES_POR_IP, JANELA);
+        boolean porEmail = rateLimitService.registrarSePermitido("validar-codigo:email:" + email, MAX_VALIDACOES_POR_EMAIL, JANELA);
+        if (!porIp || !porEmail) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, MSG_LIMITE_CODIGO);
+        }
+
+        long inicio = System.nanoTime();
+        try {
+            List<Alvo> alvos = localizarContas(email, dto.getClinicaCodigo());
+            if (alvos.size() != 1) {
+                authTokenService.simularConferencia(dto.getCodigo());
+                throw codigoInvalido();
+            }
+            Alvo alvo = alvos.get(0);
+            AuthToken consumido = authTokenService
+                    .consumirPorCodigo(alvo.user().getId(), TipoTokenAuthEnum.RESET_SENHA, dto.getCodigo())
+                    .orElseThrow(this::codigoInvalido);
+            var ticket = authTokenService.emitir(alvo.user().getId(), consumido.getClinicaId(),
+                    TipoTokenAuthEnum.RESET_SENHA, VALIDADE_TICKET, ip);
+            return new ValidarCodigoResponseDTO(true, ticket.token(), alvo.user().getName(),
+                    alvo.clinica().getNome(), alvo.clinica().getCodigo());
+        } finally {
+            aguardarPisoDeTempo(inicio);
+        }
+    }
+
+    private void aguardarPisoDeTempo(long inicioNanos) {
+        long faltaMs = tempoMinimoValidacaoMs - (System.nanoTime() - inicioNanos) / 1_000_000;
+        if (faltaMs > 0) {
+            try {
+                Thread.sleep(faltaMs);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     public ValidarTokenResponseDTO validarToken(ValidarTokenRequestDTO dto) {
@@ -155,13 +213,16 @@ public class RecuperacaoSenhaService {
         String nomeClinica = alvo.clinica().getNome();
         String destino = alvo.user().getEmail();
         dispatcher.executar("reset-senha", () -> {
-            var emitido = authTokenService.emitir(userId, clinicaId, TipoTokenAuthEnum.RESET_SENHA, VALIDADE, ip);
+            var emitido = authTokenService.emitirComCodigo(userId, clinicaId, TipoTokenAuthEnum.RESET_SENHA,
+                    VALIDADE, VALIDADE_CODIGO, ip);
             String link = templateService.linkFrontend("/redefinir-senha", "token", emitido.token(), "c", codigo);
             Map<String, String> variaveis = Map.of(
                     "nome", vazioSeNulo(nome),
                     "nomeClinica", vazioSeNulo(nomeClinica),
                     "link", link,
-                    "validade", TEXTO_VALIDADE);
+                    "validade", TEXTO_VALIDADE,
+                    "codigoFormatado", emitido.codigo().substring(0, 3) + " " + emitido.codigo().substring(3),
+                    "validadeCodigo", TEXTO_VALIDADE_CODIGO);
             emailService.enviar(destino, ASSUNTO_RESET,
                     templateService.renderizar("reset-senha", variaveis),
                     templateService.renderizarTexto("reset-senha", variaveis),
@@ -203,6 +264,10 @@ public class RecuperacaoSenhaService {
 
     private String vazioSeNulo(String valor) {
         return valor == null ? "" : valor;
+    }
+
+    private ResponseStatusException codigoInvalido() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, MSG_CODIGO_INVALIDO);
     }
 
     private ResponseStatusException invalido() {

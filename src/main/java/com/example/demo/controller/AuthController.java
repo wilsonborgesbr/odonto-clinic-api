@@ -11,6 +11,8 @@ import com.example.demo.dto.RedefinirSenhaDTO;
 import com.example.demo.dto.RegisterClinicaRequestDTO;
 import com.example.demo.dto.SelecionarClinicaRequestDTO;
 import com.example.demo.dto.UpdateProfileDTO;
+import com.example.demo.dto.ValidarCodigoRecuperacaoDTO;
+import com.example.demo.dto.ValidarCodigoResponseDTO;
 import com.example.demo.dto.ValidarTokenRequestDTO;
 import com.example.demo.dto.ValidarTokenResponseDTO;
 import com.example.demo.enums.RoleEnum;
@@ -95,6 +97,13 @@ public class AuthController {
     @PostMapping("/validar-token")
     public ResponseEntity<ValidarTokenResponseDTO> validarToken(@RequestBody @Valid ValidarTokenRequestDTO data) {
         return ResponseEntity.ok(recuperacaoSenhaService.validarToken(data));
+    }
+
+    /** Troca o código de 6 dígitos do e-mail por um ticket de 5 min aceito em {@code /redefinir-senha}. */
+    @PostMapping("/validar-codigo-recuperacao")
+    public ResponseEntity<ValidarCodigoResponseDTO> validarCodigoRecuperacao(
+            @RequestBody @Valid ValidarCodigoRecuperacaoDTO data, HttpServletRequest request) {
+        return ResponseEntity.ok(recuperacaoSenhaService.validarCodigo(data, request.getRemoteAddr()));
     }
 
     @PostMapping("/redefinir-senha")

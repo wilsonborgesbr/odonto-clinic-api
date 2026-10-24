@@ -15,7 +15,7 @@ import com.example.demo.model.Clinica;
 import com.example.demo.model.User;
 import com.example.demo.repository.ClinicaRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.AuthTokenService.TokenEmitido;
+import com.example.demo.service.AuthTokenService.CodigoEmitido;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,8 +83,8 @@ class RecuperacaoSenhaServiceTest {
     private void contaExiste() {
         when(clinicaRepository.findByCodigo("tainah")).thenReturn(Optional.of(clinica));
         when(userLookupService.buscarPorEmail("ana@x.com", "c1")).thenReturn(Optional.of(user));
-        when(authTokenService.emitir(eq("u1"), eq("c1"), eq(TipoTokenAuthEnum.RESET_SENHA), any(), any()))
-                .thenReturn(new TokenEmitido(TOKEN, Instant.now().plusSeconds(1800)));
+        when(authTokenService.emitirComCodigo(eq("u1"), eq("c1"), eq(TipoTokenAuthEnum.RESET_SENHA), any(), any(), any()))
+                .thenReturn(new CodigoEmitido(TOKEN, "004812", Instant.now().plusSeconds(1800)));
     }
 
     // ───────────── solicitar ─────────────
@@ -96,7 +96,7 @@ class RecuperacaoSenhaServiceTest {
         MensagemDTO r = service.solicitar(pedido("  Ana@X.com ", "TAINAH"), IP);
 
         assertEquals(RecuperacaoSenhaService.MSG_NEUTRA, r.mensagem());
-        verify(authTokenService).emitir("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
+        verify(authTokenService).emitirComCodigo("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), Duration.ofMinutes(15), IP);
         ArgumentCaptor<String> assunto = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> html = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> texto = ArgumentCaptor.forClass(String.class);
@@ -134,13 +134,13 @@ class RecuperacaoSenhaServiceTest {
         Clinica clinica2 = Clinica.builder().id("c2").codigo("zeta").nome("Zeta").ativo(true).build();
         when(userLookupService.buscarContasPorEmail("ana@x.com")).thenReturn(List.of(user, outra));
         when(clinicaRepository.findAllById(any())).thenReturn(List.of(clinica, clinica2));
-        when(authTokenService.emitir(any(), any(), eq(TipoTokenAuthEnum.RESET_SENHA), any(), any()))
-                .thenReturn(new TokenEmitido(TOKEN, Instant.now().plusSeconds(1800)));
+        when(authTokenService.emitirComCodigo(any(), any(), eq(TipoTokenAuthEnum.RESET_SENHA), any(), any(), any()))
+                .thenReturn(new CodigoEmitido(TOKEN, "004812", Instant.now().plusSeconds(1800)));
 
         service.solicitar(pedido("ana@x.com", null), IP);
 
-        verify(authTokenService).emitir("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
-        verify(authTokenService).emitir("u2", "c2", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), IP);
+        verify(authTokenService).emitirComCodigo("u1", "c1", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), Duration.ofMinutes(15), IP);
+        verify(authTokenService).emitirComCodigo("u2", "c2", TipoTokenAuthEnum.RESET_SENHA, Duration.ofMinutes(30), Duration.ofMinutes(15), IP);
         verify(emailService, times(2)).enviar(eq("ana@x.com"), any(), any(), any(), any());
     }
 
@@ -172,7 +172,7 @@ class RecuperacaoSenhaServiceTest {
     void solicitar_FalhaAoEmitirTokenTambemNaoChegaAoUsuario() {
         when(clinicaRepository.findByCodigo("tainah")).thenReturn(Optional.of(clinica));
         when(userLookupService.buscarPorEmail("ana@x.com", "c1")).thenReturn(Optional.of(user));
-        when(authTokenService.emitir(any(), any(), any(), any(), any())).thenThrow(new RuntimeException("mongo fora"));
+        when(authTokenService.emitirComCodigo(any(), any(), any(), any(), any(), any())).thenThrow(new RuntimeException("mongo fora"));
 
         assertDoesNotThrow(() -> service.solicitar(pedido("ana@x.com", "tainah"), IP));
         verifyNoInteractions(emailService);
@@ -204,8 +204,8 @@ class RecuperacaoSenhaServiceTest {
     void solicitar_LimitePorIpBloqueiaEmailsDiferentesDoMesmoIp() {
         when(clinicaRepository.findByCodigo("tainah")).thenReturn(Optional.of(clinica));
         when(userLookupService.buscarPorEmail(any(), eq("c1"))).thenReturn(Optional.of(user));
-        when(authTokenService.emitir(any(), any(), any(), any(), any()))
-                .thenReturn(new TokenEmitido(TOKEN, Instant.now().plusSeconds(1800)));
+        when(authTokenService.emitirComCodigo(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new CodigoEmitido(TOKEN, "004812", Instant.now().plusSeconds(1800)));
 
         for (int i = 0; i < RecuperacaoSenhaService.MAX_PEDIDOS_POR_IP + 5; i++) {
             service.solicitar(pedido("conta" + i + "@x.com", "tainah"), "10.0.3.3");

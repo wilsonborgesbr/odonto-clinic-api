@@ -8,7 +8,11 @@ Para criar uma nova senha, abra este link:
 
 ${link}
 
-Este link vale por ${validade} e só pode ser usado uma vez.
+Ou digite este código de verificação de 6 dígitos no sistema:
+
+${codigoFormatado}
+
+O código vale por ${validadeCodigo}. O link vale por ${validade}. Ambos só podem ser usados uma vez.
 
 Não pediu essa alteração? Pode ignorar este e-mail: sua senha continua a mesma.
 

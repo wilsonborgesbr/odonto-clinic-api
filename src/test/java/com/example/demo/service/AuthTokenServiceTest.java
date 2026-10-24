@@ -35,6 +35,7 @@ import static org.mockito.Mockito.*;
 class AuthTokenServiceTest {
 
     private static final Instant AGORA = Instant.parse("2026-10-22T13:00:00Z");
+    private static final String SEGREDO = "segredo-de-teste-do-servidor";
 
     @Mock
     private AuthTokenRepository repository;
@@ -43,7 +44,7 @@ class AuthTokenServiceTest {
     private MongoTemplate mongoTemplate;
 
     private AuthTokenService service() {
-        return new AuthTokenService(repository, mongoTemplate, Clock.fixed(AGORA, ZoneOffset.UTC));
+        return new AuthTokenService(repository, mongoTemplate, Clock.fixed(AGORA, ZoneOffset.UTC), SEGREDO);
     }
 
     private AuthToken salvo(TokenEmitido emitido) {
