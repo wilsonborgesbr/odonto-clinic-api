@@ -6,7 +6,6 @@ import com.example.demo.dto.CriarUsuarioDTO;
 import com.example.demo.dto.UsuarioDTO;
 import com.example.demo.enums.RoleEnum;
 import com.example.demo.model.User;
-import com.example.demo.model.UserPreferences;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
 import com.example.demo.service.UserLookupService;
@@ -14,6 +13,11 @@ import com.example.demo.util.FormatadorTexto;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,6 +42,9 @@ public class UsuarioController {
 
     @Autowired
     private UserLookupService userLookupService;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     private void requireGestaoUsuarios() {
         var atual = AuthContextHelper.currentUser();
@@ -65,23 +72,36 @@ public class UsuarioController {
 
     @PatchMapping("/me/preferences")
     public ResponseEntity<UsuarioDTO> atualizarPreferencias(@RequestBody @Valid AtualizarPreferenciasDTO dto) {
+        if (dto.vazio()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe ao menos uma preferência: hideFinancialInfo ou theme.");
+        }
+
         String userId = AuthContextHelper.currentUserId();
         String clinicaId = AuthContextHelper.currentClinicaId();
 
-        User user = userRepository.findById(userId)
-                .filter(u -> clinicaId.equals(u.getClinicaId()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
-
-        if (!Boolean.TRUE.equals(user.getAtivo())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário inativo.");
+        // $set por campo e atômico: PATCHs simultâneos de campos diferentes não se sobrescrevem.
+        Update update = new Update().set("updatedAt", LocalDateTime.now());
+        if (dto.getHideFinancialInfo() != null) {
+            update.set("preferences.hideFinancialInfo", dto.getHideFinancialInfo());
+        }
+        if (dto.getTheme() != null) {
+            update.set("preferences.theme", dto.getTheme());
         }
 
-        UserPreferences prefs = user.getPreferences() != null ? user.getPreferences() : new UserPreferences();
-        prefs.setHideFinancialInfo(dto.getHideFinancialInfo());
-        user.setPreferences(prefs);
-        user.setUpdatedAt(LocalDateTime.now());
+        Query ativoDaClinica = Query.query(Criteria.where("id").is(userId)
+                .and("clinicaId").is(clinicaId)
+                .and("ativo").ne(false));
+        User atualizado = mongoTemplate.findAndModify(ativoDaClinica, update,
+                FindAndModifyOptions.options().returnNew(true), User.class);
+        if (atualizado != null) {
+            return ResponseEntity.ok(UsuarioDTO.from(atualizado));
+        }
 
-        return ResponseEntity.ok(UsuarioDTO.from(userRepository.save(user)));
+        User existente = userRepository.findById(userId)
+                .filter(u -> clinicaId.equals(u.getClinicaId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                Boolean.TRUE.equals(existente.getAtivo()) ? "Não foi possível atualizar as preferências." : "Usuário inativo.");
     }
 
     @PostMapping
