@@ -88,12 +88,14 @@ class EmailTemplateServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"reset-senha", "confirmar-email-dono", "senha-alterada-alerta"})
-    void renderizar_HtmlSemPreheaderEscondidoNemImagemRemota(String template) {
+    void renderizar_HtmlSemPreheaderEscondidoESoComOIconeDaMarca(String template) {
         String html = service.renderizar(template, variaveis());
 
         assertFalse(html.contains("display:none"), "sem texto escondido");
         assertFalse(html.contains("&zwnj;"));
-        assertFalse(html.contains("<img"));
+        assertEquals(1, html.split("<img", -1).length - 1, "só o ícone K2 do cabeçalho");
+        assertTrue(html.contains("src=\"https://app.bokka.com.br/email/bokka-k2-96.png\""));
+        assertTrue(html.contains("width=\"40\" height=\"40\" alt=\"\""));
         assertFalse(html.toLowerCase().contains("text-transform:uppercase"));
     }
 

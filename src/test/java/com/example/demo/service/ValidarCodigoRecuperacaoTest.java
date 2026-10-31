@@ -280,7 +280,8 @@ class ValidarCodigoRecuperacaoTest {
         assertFalse(html.getValue().contains("${"));
         assertFalse(texto.getValue().contains("${"));
         assertFalse(html.getValue().contains("display:none"), "sem preheader escondido");
-        assertFalse(html.getValue().contains("<img"));
+        assertEquals(1, html.getValue().split("<img", -1).length - 1, "só o ícone K2 do cabeçalho");
+        assertTrue(html.getValue().contains("src=\"https://app.bokka.com.br/email/bokka-k2-96.png\""));
         assertFalse(html.getValue().contains("text-transform:uppercase"));
         assertTrue(html.getValue().contains("https://bokka.com.br/redefinir-senha?token=TOKEN&amp;c=tainah"), "o link continua no e-mail");
     }
