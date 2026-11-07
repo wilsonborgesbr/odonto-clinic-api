@@ -1,8 +1,11 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.VincularOdontogramaDTO;
+import com.example.demo.dto.VinculoOdontogramaResponseDTO;
 import com.example.demo.enums.StatusProcedimentoEnum;
 import com.example.demo.model.Procedimento;
 import com.example.demo.service.ProcedimentoService;
+import com.example.demo.service.VinculoOdontogramaService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,9 @@ public class ProcedimentoController {
 
     @Autowired
     private ProcedimentoService procedimentoService;
+
+    @Autowired
+    private VinculoOdontogramaService vinculoOdontogramaService;
 
     @PostMapping
     public ResponseEntity<Procedimento> criar(@RequestBody @Valid Procedimento procedimento) {
@@ -58,6 +64,14 @@ public class ProcedimentoController {
             @RequestBody @Valid Procedimento procedimento) {
         Procedimento procedimentoAtualizado = procedimentoService.atualizar(id, procedimento);
         return ResponseEntity.ok(procedimentoAtualizado);
+    }
+
+    /** Vincula o procedimento a um odontograma e marca o dente/faces nele, de forma idempotente. */
+    @PostMapping("/{id}/vincular-odontograma")
+    public ResponseEntity<VinculoOdontogramaResponseDTO> vincularOdontograma(
+            @PathVariable String id,
+            @RequestBody @Valid VincularOdontogramaDTO dto) {
+        return ResponseEntity.ok(vinculoOdontogramaService.vincular(id, dto));
     }
 
     @DeleteMapping("/{id}")

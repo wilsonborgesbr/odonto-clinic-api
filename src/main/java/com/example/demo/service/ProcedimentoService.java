@@ -58,6 +58,8 @@ public class ProcedimentoService {
         }
 
         procedimento.setClinicaId(clinicaId);
+        // O Jackson preenche o campo direto, sem passar pelo setter: normaliza as faces aqui.
+        procedimento.setFaces(procedimento.facesInformadas());
 
         if (procedimento.getStatus() == null) {
             procedimento.setStatus(StatusProcedimentoEnum.ORCADO);
@@ -166,6 +168,9 @@ public class ProcedimentoService {
         procedimentoExistente.setNomeProcedimento(dadosAtualizados.getNomeProcedimento());
         procedimentoExistente.setDescricao(dadosAtualizados.getDescricao());
         procedimentoExistente.setDente(dadosAtualizados.getDente());
+        if (dadosAtualizados.facesInformadas() != null) {
+            procedimentoExistente.setFaces(dadosAtualizados.facesInformadas());
+        }
         procedimentoExistente.setRegiao(dadosAtualizados.getRegiao());
         procedimentoExistente.setStatus(dadosAtualizados.getStatus());
         procedimentoExistente.setDataRealizacao(dadosAtualizados.getDataRealizacao());
@@ -177,18 +182,20 @@ public class ProcedimentoService {
         procedimentoExistente.setSessaoAtual(dadosAtualizados.getSessaoAtual());
         procedimentoExistente.setObservacoesTecnicas(dadosAtualizados.getObservacoesTecnicas());
 
-        // Vínculo opcional com odontograma
-        if (dadosAtualizados.getOdontogramaId() != null && !dadosAtualizados.getOdontogramaId().isBlank()) {
-            var odonto = odontogramaRepository
-                    .findByIdAndClinicaId(dadosAtualizados.getOdontogramaId(), clinicaId);
-            if (odonto.isEmpty()
-                    || !procedimentoExistente.getPacienteId().equals(odonto.get().getPacienteId())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Odontograma vinculado inválido para este paciente.");
+        // Vínculo com odontograma: ausente (null) mantém o atual; texto vazio desfaz; id informado é validado
+        String novoOdontogramaId = dadosAtualizados.getOdontogramaId();
+        if (novoOdontogramaId != null) {
+            if (novoOdontogramaId.isBlank()) {
+                procedimentoExistente.setOdontogramaId(null);
+            } else {
+                var odonto = odontogramaRepository.findByIdAndClinicaId(novoOdontogramaId, clinicaId);
+                if (odonto.isEmpty()
+                        || !procedimentoExistente.getPacienteId().equals(odonto.get().getPacienteId())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Odontograma vinculado inválido para este paciente.");
+                }
+                procedimentoExistente.setOdontogramaId(novoOdontogramaId);
             }
-            procedimentoExistente.setOdontogramaId(dadosAtualizados.getOdontogramaId());
-        } else {
-            procedimentoExistente.setOdontogramaId(null);
         }
 
         // Atualiza a data de modificação
