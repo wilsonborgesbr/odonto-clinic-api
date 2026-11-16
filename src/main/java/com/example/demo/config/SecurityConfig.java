@@ -49,6 +49,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/validar-codigo-recuperacao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/redefinir-senha").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/confirmar-email").permitAll()
+                        // Retorno do OAuth do Google (navegador, sem JWT; autenticado pelo state assinado)
+                        .requestMatchers(HttpMethod.GET, "/api/google-calendar/callback").permitAll()
+                        // Notificações do Google Calendar (autenticadas pelos cabeçalhos X-Goog-*)
+                        .requestMatchers(HttpMethod.POST, "/api/public/webhooks/google-calendar").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // Qualquer outra requisição precisa de um token válido

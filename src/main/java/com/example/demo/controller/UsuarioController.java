@@ -4,7 +4,10 @@ import com.example.demo.dto.AtualizarPreferenciasDTO;
 import com.example.demo.dto.AtualizarUsuarioDTO;
 import com.example.demo.dto.CriarUsuarioDTO;
 import com.example.demo.dto.UsuarioDTO;
+import com.example.demo.enums.EscopoGoogleCalendarEnum;
+import com.example.demo.enums.PermissaoEnum;
 import com.example.demo.enums.RoleEnum;
+import com.example.demo.googlecalendar.ConexaoGoogleService;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.AuthContextHelper;
@@ -25,7 +28,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Gestão dos usuários (logins) da clínica. Só usuários com permissão
@@ -45,6 +50,31 @@ public class UsuarioController {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private ConexaoGoogleService conexaoGoogleService;
+
+    /**
+     * Só proprietário ou sócio concede a integração com o Google Calendar. Vale também para o que chega por
+     * cargo: virar SOCIO traz todas as permissões, inclusive esta.
+     */
+    private void exigirDonoParaConceder(User ator, Set<PermissaoEnum> antes, Set<PermissaoEnum> depois) {
+        boolean concedida = depois.contains(PermissaoEnum.INTEGRACAO_GOOGLE_CALENDAR)
+                && !antes.contains(PermissaoEnum.INTEGRACAO_GOOGLE_CALENDAR);
+        boolean ehDono = ator.getRole() == RoleEnum.PROPRIETARIO || ator.getRole() == RoleEnum.SOCIO;
+        if (concedida && !ehDono) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente o proprietário ou sócio pode conceder a integração com o Google Calendar.");
+        }
+    }
+
+    private void exigirDonoParaMudarEscopo(User ator, EscopoGoogleCalendarEnum atual, EscopoGoogleCalendarEnum novo) {
+        boolean ehDono = ator.getRole() == RoleEnum.PROPRIETARIO || ator.getRole() == RoleEnum.SOCIO;
+        if (novo != null && novo != atual && !ehDono) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente o proprietário ou sócio pode definir o escopo da agenda Google de um usuário.");
+        }
+    }
 
     private void requireGestaoUsuarios() {
         var atual = AuthContextHelper.currentUser();
@@ -118,6 +148,13 @@ public class UsuarioController {
                 "Não é possível criar outro proprietário. Use SOCIO para dar controle equivalente.");
         }
 
+        User ator = AuthContextHelper.currentUser();
+        Set<PermissaoEnum> permissoesDoNovo = (dto.getPermissoes() != null && !dto.getPermissoes().isEmpty())
+                ? EnumSet.copyOf(dto.getPermissoes())
+                : dto.getRole().permissoesPadrao();
+        exigirDonoParaConceder(ator, EnumSet.noneOf(PermissaoEnum.class), permissoesDoNovo);
+        exigirDonoParaMudarEscopo(ator, EscopoGoogleCalendarEnum.SOMENTE_PROPRIO, dto.getEscopoGoogleCalendar());
+
         String encoded = new BCryptPasswordEncoder().encode(dto.getPassword());
         User novo = User.builder()
                 .name(dto.getName())
@@ -126,6 +163,7 @@ public class UsuarioController {
                 .clinicaId(clinicaId)
                 .role(dto.getRole())
                 .permissoes(dto.getPermissoes())
+                .escopoGoogleCalendar(dto.getEscopoGoogleCalendar())
                 .ativo(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -163,16 +201,34 @@ public class UsuarioController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado nesta clínica.");
         }
 
+        Set<PermissaoEnum> permissoesAntes = user.permissoesEfetivas();
+
         user.setName(dto.getName());
         user.setEmail(email);
         user.setRole(dto.getRole());
         user.setPermissoes(dto.getPermissoes());
+        Set<PermissaoEnum> permissoesDepois = user.permissoesEfetivas();
+        exigirDonoParaConceder(currentUser, permissoesAntes, permissoesDepois);
+        EscopoGoogleCalendarEnum escopoAntes = user.escopoGoogleEfetivo();
+        exigirDonoParaMudarEscopo(currentUser, escopoAntes, dto.getEscopoGoogleCalendar());
+        if (dto.getEscopoGoogleCalendar() != null) {
+            user.setEscopoGoogleCalendar(dto.getEscopoGoogleCalendar());
+        }
+
         if (dto.getNovaSenha() != null && !dto.getNovaSenha().isBlank()) {
             user.setPassword(new BCryptPasswordEncoder().encode(dto.getNovaSenha()));
         }
         user.setUpdatedAt(LocalDateTime.now());
 
-        return ResponseEntity.ok(UsuarioDTO.from(userRepository.save(user)));
+        User salvo = userRepository.save(user);
+        if (permissoesAntes.contains(PermissaoEnum.INTEGRACAO_GOOGLE_CALENDAR)
+                && !permissoesDepois.contains(PermissaoEnum.INTEGRACAO_GOOGLE_CALENDAR)) {
+            conexaoGoogleService.pausarPorPerdaDePermissao(clinicaId, salvo.getId());
+        }
+        if (dto.getEscopoGoogleCalendar() != null) {
+            conexaoGoogleService.aplicarNovoEscopo(salvo);
+        }
+        return ResponseEntity.ok(UsuarioDTO.from(salvo));
     }
 
     @DeleteMapping("/{id}")
@@ -194,6 +250,7 @@ public class UsuarioController {
         user.setAtivo(false);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+        conexaoGoogleService.desconectarDoUsuario(clinicaId, user.getId());
         return ResponseEntity.noContent().build();
     }
 

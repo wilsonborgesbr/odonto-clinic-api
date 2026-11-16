@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.enums.EscopoGoogleCalendarEnum;
 import com.example.demo.enums.PermissaoEnum;
 import com.example.demo.enums.RoleEnum;
 import com.example.demo.enums.StatusContaEnum;
@@ -67,6 +68,12 @@ public class User implements UserDetails {
     private String funcionarioId;
     private String dentistaId;
 
+    /**
+     * O que cai na agenda Google deste usuário (a conta Google é sempre a própria). Definido pelo proprietário/sócio;
+     * ausente = SOMENTE_PROPRIO.
+     */
+    private EscopoGoogleCalendarEnum escopoGoogleCalendar;
+
     /** Soft delete de login (usuário não removido mas bloqueado). */
     @Builder.Default
     private Boolean ativo = true;
@@ -105,6 +112,11 @@ public class User implements UserDetails {
             auths.add(new SimpleGrantedAuthority(p.name()));
         }
         return auths;
+    }
+
+    /** Escopo da agenda Google deste usuário; sem definição vale SOMENTE_PROPRIO. */
+    public EscopoGoogleCalendarEnum escopoGoogleEfetivo() {
+        return escopoGoogleCalendar != null ? escopoGoogleCalendar : EscopoGoogleCalendarEnum.SOMENTE_PROPRIO;
     }
 
     /**

@@ -21,6 +21,7 @@ public class UsuarioDTO {
     private String email;
     private RoleEnum role;
     private Set<PermissaoEnum> permissoes;
+    private com.example.demo.enums.EscopoGoogleCalendarEnum escopoGoogleCalendar;
     private Boolean ativo;
     private boolean emailConfirmado;
     private LocalDateTime createdAt;
@@ -33,6 +34,7 @@ public class UsuarioDTO {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setPermissoes(user.permissoesEfetivas());
+        dto.setEscopoGoogleCalendar(user.escopoGoogleEfetivo());
         dto.setAtivo(user.getAtivo());
         dto.setEmailConfirmado(user.emailEstaConfirmado());
         dto.setCreatedAt(user.getCreatedAt());

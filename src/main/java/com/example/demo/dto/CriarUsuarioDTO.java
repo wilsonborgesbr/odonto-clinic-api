@@ -29,4 +29,7 @@ public class CriarUsuarioDTO {
 
     /** Se null, usa permissões padrão do role. */
     private Set<PermissaoEnum> permissoes;
+
+    /** Escopo da agenda Google deste usuário; só o proprietário/sócio pode alterar. Se null, mantém o atual. */
+    private com.example.demo.enums.EscopoGoogleCalendarEnum escopoGoogleCalendar;
 }

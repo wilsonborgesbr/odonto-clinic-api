@@ -29,5 +29,8 @@ public enum PermissaoEnum {
 
     // Master (só proprietário/sócio por padrão)
     USUARIOS_E_PERMISSOES,
-    CONFIGURACOES
+    CONFIGURACOES,
+
+    // Integrações externas (proprietário/sócio por padrão; o dono pode conceder a dentistas e funcionários)
+    INTEGRACAO_GOOGLE_CALENDAR
 }

@@ -4,6 +4,10 @@ import com.example.demo.enums.StatusAgendamentoEnum;
 import com.example.demo.enums.StatusProcedimentoEnum;
 import com.example.demo.enums.TipoAgendamentoEnum;
 import com.example.demo.exception.CampoInvalidoException;
+import com.example.demo.googlecalendar.AgendamentoSincronizacaoEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import com.example.demo.model.Agendamento;
 import com.example.demo.model.Procedimento;
 import com.example.demo.repository.AgendamentoRepository;
@@ -26,6 +30,8 @@ import java.util.regex.Pattern;
 @Service
 public class AgendamentoService {
 
+    private static final Logger log = LoggerFactory.getLogger(AgendamentoService.class);
+
     private static final Pattern DIA_ISO = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
 
     @Autowired
@@ -39,6 +45,9 @@ public class AgendamentoService {
 
     @Autowired
     private ProcedimentoService procedimentoService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public Agendamento criar(Agendamento agendamento) {
         String clinicaId = AuthContextHelper.currentClinicaId();
@@ -94,7 +103,18 @@ public class AgendamentoService {
             salvo = agendamentoRepository.save(salvo);
         }
 
+        publicarSincronizacao(salvo, AgendamentoSincronizacaoEvent.Tipo.CRIADO);
         return salvo;
+    }
+
+    /** Avisa a integração com o Google Calendar (assíncrona); falha de publicação nunca derruba o agendamento. */
+    private void publicarSincronizacao(Agendamento agendamento, AgendamentoSincronizacaoEvent.Tipo tipo) {
+        try {
+            eventPublisher.publishEvent(new AgendamentoSincronizacaoEvent(
+                    agendamento.getClinicaId(), agendamento.getId(), tipo));
+        } catch (RuntimeException e) {
+            log.error("Não foi possível publicar a sincronização do agendamento {}: {}", agendamento.getId(), e.getMessage());
+        }
     }
 
     public Page<Agendamento> listarTodos(Pageable pageable) {
@@ -176,7 +196,11 @@ public class AgendamentoService {
         existente.setObservacoes(dadosAtualizados.getObservacoes());
         existente.setUpdatedAt(LocalDateTime.now());
 
-        return agendamentoRepository.save(existente);
+        Agendamento salvo = agendamentoRepository.save(existente);
+        publicarSincronizacao(salvo, salvo.getStatus() == StatusAgendamentoEnum.CANCELADO
+                ? AgendamentoSincronizacaoEvent.Tipo.CANCELADO
+                : AgendamentoSincronizacaoEvent.Tipo.ATUALIZADO);
+        return salvo;
     }
 
     public void deletar(String id) {
@@ -184,5 +208,6 @@ public class AgendamentoService {
                 .findByIdAndClinicaId(id, AuthContextHelper.currentClinicaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado."));
         agendamentoRepository.delete(existente);
+        publicarSincronizacao(existente, AgendamentoSincronizacaoEvent.Tipo.EXCLUIDO);
     }
 }
