@@ -169,7 +169,9 @@ public class GoogleCalendarRestApi implements GoogleCalendarApi {
     public PaginaEventos listarEventos(String accessToken, String calendarId, String syncToken, String pagina,
                                        Instant aPartirDe) {
         JsonNode corpo = executar(() -> http.get().uri(uri -> {
-                    var u = uri.path("/calendars/{c}/events").queryParam("showDeleted", "true")
+                    var base = java.net.URI.create(URL_CALENDAR);
+                    var u = uri.scheme(base.getScheme()).host(base.getHost())
+                            .path(base.getPath() + "/calendars/{c}/events").queryParam("showDeleted", "true")
                             .queryParam("maxResults", POR_PAGINA);
                     if (syncToken != null) {
                         u.queryParam("syncToken", syncToken);

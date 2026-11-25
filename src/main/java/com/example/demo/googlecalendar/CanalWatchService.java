@@ -97,7 +97,7 @@ public class CanalWatchService {
         } catch (ConexaoIndisponivelException e) {
             log.info("Canal não criado: {}", e.getMessage());
         } catch (RuntimeException e) {
-            log.error("Falha ao criar o canal da conexão {}: {}", conexaoId, e.getMessage());
+            log.error("Falha ao criar o canal da conexão {}: {}", conexaoId, e.getMessage(), e);
         }
     }
 
@@ -166,7 +166,7 @@ public class CanalWatchService {
             } catch (ConexaoIndisponivelException e) {
                 log.info("Canal da conexão {} não renovado: {}", conexao.getId(), e.getMessage());
             } catch (RuntimeException e) {
-                log.error("Falha ao renovar o canal da conexão {}: {}", conexao.getId(), e.getMessage());
+                log.error("Falha ao renovar o canal da conexão {}: {}", conexao.getId(), e.getMessage(), e);
             }
         }
     }

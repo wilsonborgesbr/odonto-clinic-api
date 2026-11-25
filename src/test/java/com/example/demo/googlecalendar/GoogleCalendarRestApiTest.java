@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
@@ -179,7 +180,7 @@ class GoogleCalendarRestApiTest {
 
     @Test
     void listarEventos_CargaInicial_UsaTimeMinESemSyncToken_ELeProximoToken() {
-        servidor.expect(requestTo(org.hamcrest.Matchers.allOf(containsString("/calendars/primary/events?"),
+        servidor.expect(requestTo(org.hamcrest.Matchers.allOf(startsWith(GoogleCalendarRestApi.URL_CALENDAR + "/calendars/primary/events?"),
                         containsString("timeMin=2026-11-09T12:00:00Z"), containsString("showDeleted=true"),
                         not(containsString("syncToken")))))
                 .andRespond(withSuccess("{\"items\":[],\"nextSyncToken\":\"tok-1\"}", MediaType.APPLICATION_JSON));
@@ -192,7 +193,7 @@ class GoogleCalendarRestApiTest {
 
     @Test
     void listarEventos_Incremental_UsaSyncTokenENaoTimeMin() {
-        servidor.expect(requestTo(org.hamcrest.Matchers.allOf(containsString("syncToken=tok-1"), not(containsString("timeMin")))))
+        servidor.expect(requestTo(org.hamcrest.Matchers.allOf(startsWith(GoogleCalendarRestApi.URL_CALENDAR + "/calendars/primary/events?"), containsString("syncToken=tok-1"), not(containsString("timeMin")))))
                 .andRespond(withSuccess("{\"items\":[],\"nextSyncToken\":\"tok-2\"}", MediaType.APPLICATION_JSON));
 
         assertEquals("tok-2", api.listarEventos("tok", "primary", "tok-1", null, AGORA).proximoSyncToken());
@@ -200,7 +201,7 @@ class GoogleCalendarRestApiTest {
 
     @Test
     void listarEventos_InterpretaNormalCanceladoDiaInteiroEOffset() {
-        servidor.expect(requestTo(containsString("/calendars/primary/events")))
+        servidor.expect(requestTo(startsWith(GoogleCalendarRestApi.URL_CALENDAR + "/calendars/primary/events?")))
                 .andRespond(withSuccess("""
                         {"items":[
                           {"id":"e1","status":"confirmed","summary":"Maria — Limpeza",
@@ -231,8 +232,20 @@ class GoogleCalendarRestApiTest {
     }
 
     @Test
+    void listarEventos_PaginaSeguinte_UsaUrlAbsolutaEPageToken() {
+        servidor.expect(requestTo(org.hamcrest.Matchers.allOf(
+                        startsWith("https://www.googleapis.com/calendar/v3/calendars/a%40b.com/events?"),
+                        containsString("pageToken=p2"), containsString("syncToken=tok-1"))))
+                .andExpect(header("Authorization", "Bearer tok"))
+                .andRespond(withSuccess("{\"items\":[],\"nextSyncToken\":\"tok-3\"}", MediaType.APPLICATION_JSON));
+
+        assertEquals("tok-3", api.listarEventos("tok", "a@b.com", "tok-1", "p2", null).proximoSyncToken());
+        servidor.verify();
+    }
+
+    @Test
     void listarEventos_Token410_ViraExcecaoDesaparecido() {
-        servidor.expect(requestTo(containsString("/calendars/primary/events")))
+        servidor.expect(requestTo(startsWith(GoogleCalendarRestApi.URL_CALENDAR + "/calendars/primary/events?")))
                 .andRespond(withStatus(org.springframework.http.HttpStatus.GONE));
 
         assertTrue(assertThrows(GoogleApiException.class, () -> api.listarEventos("tok", "primary", "velho", null, null)).desaparecido());
